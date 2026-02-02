@@ -40,10 +40,7 @@
         .section-title { font-size: 11px; font-weight: 700; color: var(--verde-escuro); text-transform: uppercase; margin-bottom: 12px; }
         
         input, select, textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--neutro-borda); font-size: 14px; outline: none; box-sizing: border-box; background: white; }
-        
-        /* Força a capitalização visualmente enquanto digita */
         .cap-input { text-transform: capitalize; }
-
         .grid-prod { display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 8px; margin-bottom: 8px; align-items: center; }
         
         button { cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 11px; text-transform: uppercase; border: none; }
@@ -73,9 +70,30 @@
         .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center; }
         .accordion { background: #f1f5f9; padding: 10px; width: 100%; text-align: left; border: 1px solid var(--neutro-borda); border-radius: 6px; margin-bottom: 5px; display: flex; justify-content: space-between; }
         .panel { display: none; background: white; padding: 15px; border: 1px solid var(--neutro-borda); border-radius: 0 0 6px 6px; margin-bottom: 15px; }
+
+        /* Estilo do Alerta Flutuante */
+        #alerta-novo-pedido {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--verde-claro);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            font-size: 12px;
+            font-weight: bold;
+            animation: slideDown 0.5s forwards;
+        }
+        @keyframes slideDown { from { top: -50px; } to { top: 20px; } }
     </style>
 </head>
 <body>
+
+    <div id="alerta-novo-pedido">🔔 NOVO PEDIDO RECEBIDO!</div>
 
     <div class="app-container">
         <div class="header">
@@ -132,6 +150,10 @@
     <script>
         const listaProdutosBase = ["Sorgo em grãos", "Sorgo triturado", "Milho", "Quirela Fina", "Quirela Grossa", "Milheto", "Ração Top Mix", "Ração Mix", "Outros"];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
+        let totalPedidosAnterior = -1; // Para controle do som
+
+        // Som de notificação (Beep profissional)
+        const somNotificacao = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
         const firebaseConfig = {
             apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
@@ -145,12 +167,9 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Função robusta para capitalizar texto
         function formatarNome(texto) {
             if (!texto) return "";
-            return texto.split(' ')
-                        .map(palavra => palavra.charAt(0).toUpperCase() + palavra.slice(1).toLowerCase())
-                        .join(' ');
+            return texto.split(' ').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
         }
 
         function adicionarLinhaProduto(p="", q=1, v="") {
@@ -171,20 +190,16 @@
         function verificarOutros(s) { 
             if (s.value === "Outros") { 
                 let d = prompt("Qual o produto?"); 
-                if (d) { 
-                    d = formatarNome(d);
-                    const n = document.createElement("option"); n.value = d; n.text = d; n.selected = true; s.add(n); 
-                } else { s.value = ""; } 
+                if (d) { d = formatarNome(d); const n = document.createElement("option"); n.value = d; n.text = d; n.selected = true; s.add(n); } 
+                else { s.value = ""; } 
             } 
         }
 
         function verificarNovoCliente(s) { 
             if (s.value === "NOVO_CLIENTE") { 
                 let n = prompt("Nome do novo cliente:"); 
-                if (n && n.trim() !== "") { 
-                    n = formatarNome(n.trim());
-                    const o = document.createElement("option"); o.value = n; o.text = n; o.selected = true; s.add(o); 
-                } else { s.value = ""; } 
+                if (n && n.trim() !== "") { n = formatarNome(n.trim()); const o = document.createElement("option"); o.value = n; o.text = n; o.selected = true; s.add(o); } 
+                else { s.value = ""; } 
             } 
         }
 
@@ -210,11 +225,42 @@
             else { const nid = db.ref('pedidos').push().key; db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: ''}).then(() => { cancelarEdicao(); }); }
         }
 
+        // --- MONITOR DE PEDIDOS (COM SOM) ---
         db.ref('pedidos').on('value', (snap) => {
-            todosPedidos = []; snap.forEach(c => { todosPedidos.push(c.val()); });
-            todosPedidos.sort((a,b) => b.timestamp - a.timestamp);
-            atualizarListasMenu(); listarPedidos();
+            const data = snap.val();
+            const listaTemporaria = [];
+            let totalAtual = 0;
+
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    listaTemporaria.push(data[key]);
+                    totalAtual++;
+                });
+            }
+
+            // Lógica do Som: Se o total de pedidos aumentou e não é a primeira carga
+            if (totalPedidosAnterior !== -1 && totalAtual > totalPedidosAnterior) {
+                tocarAvisoNovoPedido();
+            }
+            totalPedidosAnterior = totalAtual;
+
+            todosPedidos = listaTemporaria.sort((a,b) => b.timestamp - a.timestamp);
+            atualizarListasMenu(); 
+            listarPedidos();
         });
+
+        function tocarAvisoNovoPedido() {
+            // Tenta tocar o som
+            somNotificacao.play().catch(e => console.log("Áudio bloqueado. Clique na tela para ativar."));
+            
+            // Mostra o alerta visual
+            const alerta = document.getElementById('alerta-novo-pedido');
+            alerta.style.display = 'block';
+            setTimeout(() => { alerta.style.display = 'none'; }, 5000);
+            
+            // Vibração (apenas Android)
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        }
 
         function atualizarListasMenu() {
             const sc = document.getElementById('cliente'), fc = document.getElementById('filtro-cliente'), fp = document.getElementById('filtro-produto'), val = sc.value;
@@ -267,13 +313,10 @@
         
         function confirmarEntrega(id) { 
             const p = todosPedidos.find(x=>x.id===id); 
-            if(p.entrega==='Entregue') {
-                db.ref('pedidos/'+id).update({entrega:'Pendente'}); 
-            } else {
-                if(confirm("Confirmar a entrega deste pedido?")) {
-                    db.ref('pedidos/'+id).update({entrega:'Entregue'}); 
-                    if(p.pagamento==='Pendente' && confirm("O pedido foi pago?")) abrirModal(id);
-                }
+            if(p.entrega==='Entregue') db.ref('pedidos/'+id).update({entrega:'Pendente'}); 
+            else if(confirm("Confirmar a entrega deste pedido?")) {
+                db.ref('pedidos/'+id).update({entrega:'Entregue'}); 
+                if(p.pagamento==='Pendente' && confirm("O pedido foi pago?")) abrirModal(id);
             }
         }
         
