@@ -40,6 +40,10 @@
         .section-title { font-size: 11px; font-weight: 700; color: var(--verde-escuro); text-transform: uppercase; margin-bottom: 12px; }
         
         input, select, textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--neutro-borda); font-size: 14px; outline: none; box-sizing: border-box; background: white; }
+        
+        /* Força a capitalização visualmente enquanto digita */
+        .cap-input { text-transform: capitalize; }
+
         .grid-prod { display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 8px; margin-bottom: 8px; align-items: center; }
         
         button { cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 11px; text-transform: uppercase; border: none; }
@@ -141,9 +145,12 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Função para deixar primeira letra maiúscula
+        // Função robusta para capitalizar texto
         function formatarNome(texto) {
-            return texto.toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letra => letra.toUpperCase());
+            if (!texto) return "";
+            return texto.split(' ')
+                        .map(palavra => palavra.charAt(0).toUpperCase() + palavra.slice(1).toLowerCase())
+                        .join(' ');
         }
 
         function adicionarLinhaProduto(p="", q=1, v="") {
