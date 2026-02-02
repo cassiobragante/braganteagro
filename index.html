@@ -3,73 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BRAGANTE AGRO - V1.5</title>
+    <title>BRAGANTE AGRO</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
-        :root { --verde: #0a3d1d; --claro: #2e7d32; --alerta: #c62828; }
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
-        .container { max-width: 500px; margin: auto; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 15px; border-top: 5px solid var(--verde); }
+        :root { --verde: #0a3d1d; --bg: #f4f7f6; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 10px; }
+        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        h2 { color: var(--verde); font-size: 18px; margin-top: 0; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        
-        label { font-size: 12px; font-weight: bold; color: #666; display: block; margin-top: 10px; }
+        /* FORÇA MAIÚSCULAS NO CELULAR */
         input, select, textarea { 
-            width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 8px; 
-            box-sizing: border-box; font-size: 16px; background: #fff;
-            text-transform: uppercase; /* Força visual */
+            width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; 
+            font-size: 16px; box-sizing: border-box; text-transform: uppercase; 
         }
         
-        .grid-prod { display: grid; grid-template-columns: 2fr 1fr 1fr 45px; gap: 8px; margin-bottom: 10px; align-items: center; }
-        .btn-add { background: #6c757d; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; margin-bottom: 15px; }
-        .btn-salvar { background: var(--verde); color: white; border: none; padding: 18px; border-radius: 8px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; }
-        
-        .pedido-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 6px solid var(--claro); box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
-        .btn-del { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ccc; font-size: 20px; }
-        
-        #notificacao { 
-            display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); 
-            background: var(--claro); color: white; padding: 15px 30px; border-radius: 50px; 
-            z-index: 9999; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
+        button { width: 100%; padding: 15px; background: var(--verde); color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; margin-top: 10px; }
+        .grid-prod { display: grid; grid-template-columns: 2fr 1fr 1fr 40px; gap: 5px; margin-bottom: 10px; }
+        .item-pedido { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--verde); }
     </style>
 </head>
 <body>
 
-    <div id="notificacao">🔔 NOVO PEDIDO RECEBIDO!</div>
-
-    <div class="container">
-        <div class="card">
-            <h2>BRAGANTE AGRO</h2>
-            
-            <label>DATA DO PEDIDO</label>
-            <input type="date" id="campo-data">
-            
-            <label>CLIENTE</label>
-            <select id="campo-cliente" onchange="checarNovoCliente(this)">
-                <option value="">SELECIONE...</option>
-                <option value="NOVO">+ CADASTRAR NOVO CLIENTE</option>
-            </select>
-            
-            <label>ITENS DO PEDIDO</label>
-            <div id="lista-itens"></div>
-            <button class="btn-add" onclick="novaLinha()">+ ADICIONAR ITEM</button>
-            
-            <label>OBSERVAÇÕES</label>
-            <textarea id="campo-obs" rows="2"></textarea>
-            
-            <button class="btn-salvar" onclick="enviarDados()">SALVAR PEDIDO</button>
-        </div>
-
-        <div id="exibicao-pedidos"></div>
+    <div class="card">
+        <h2 style="color:var(--verde); text-align:center;">NOVO PEDIDO</h2>
+        
+        <label>DATA</label>
+        <input type="date" id="f-data">
+        
+        <label>CLIENTE</label>
+        <select id="f-cliente" onchange="novoCliente(this)">
+            <option value="">SELECIONE O CLIENTE</option>
+            <option value="ADD">+ ADICIONAR NOVO CLIENTE</option>
+        </select>
+        
+        <div id="itens"></div>
+        <button type="button" style="background:#666;" onclick="addLinha()">+ PRODUTO</button>
+        
+        <textarea id="f-obs" placeholder="OBSERVAÇÕES"></textarea>
+        <button onclick="salvar()">SALVAR AGORA</button>
     </div>
 
+    <div id="lista-pedidos"></div>
+
     <script>
-        // CONFIGURAÇÃO REVISADA
-        const config = {
+        // CREDENCIAIS RECUPERADAS
+        const firebaseConfig = {
             apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
             authDomain: "bragante-agro.firebaseapp.com",
             databaseURL: "https://bragante-agro-default-rtdb.firebaseio.com",
@@ -78,114 +58,102 @@
             messagingSenderId: "445413217691",
             appId: "1:445413217691:web:e9b37451c2689a007e7d3e"
         };
-        firebase.initializeApp(config);
-        const database = firebase.database();
-        const somAviso = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-        let totalLocal = -1;
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        // Limpeza de texto para CAIXA ALTA
-        function limpar(t) { return t ? t.toString().toUpperCase().trim() : ""; }
+        // FORÇAR MAIÚSCULA EM TUDO
+        function up(texto) { return texto ? texto.toString().toUpperCase().trim() : ""; }
 
-        function novaLinha(p="", q="", v="") {
+        function addLinha() {
             const id = Date.now();
             const div = document.createElement('div');
             div.className = 'grid-prod';
             div.id = id;
             div.innerHTML = `
-                <input type="text" placeholder="PRODUTO" value="${p}" oninput="this.value = this.value.toUpperCase()">
-                <input type="number" placeholder="QTD" value="${q}">
-                <input type="number" placeholder="VALOR" value="${v}">
-                <button style="background:none; color:red; font-size:20px; border:none;" onclick="document.getElementById('${id}').remove()">✕</button>
+                <input type="text" id="p-${id}" placeholder="PRODUTO" oninput="this.value = this.value.toUpperCase()">
+                <input type="number" id="q-${id}" placeholder="QTD">
+                <input type="number" id="v-${id}" placeholder="R$">
+                <button style="background:red; padding:5px;" onclick="document.getElementById('${id}').remove()">X</button>
             `;
-            document.getElementById('lista-itens').appendChild(div);
+            document.getElementById('itens').appendChild(div);
         }
 
-        function checarNovoCliente(sel) {
-            if (sel.value === "NO") {
-                let n = prompt("NOME DO NOVO CLIENTE:");
-                if (n) {
-                    n = limpar(n);
-                    let opt = document.createElement("option");
-                    opt.value = n; opt.text = n; opt.selected = true;
-                    sel.add(opt);
-                } else sel.value = "";
+        function novoCliente(s) {
+            if(s.value === "ADD") {
+                let n = prompt("NOME DO CLIENTE:");
+                if(n) {
+                    n = up(n);
+                    let o = document.createElement("option"); o.value = n; o.text = n; o.selected = true; s.add(o);
+                } else s.value = "";
             }
         }
 
-        function enviarDados() {
-            const cliente = limpar(document.getElementById('campo-cliente').value);
-            const data = document.getElementById('campo-data').value;
-            const obs = limpar(document.getElementById('campo-obs').value);
+        function salvar() {
+            const cliente = up(document.getElementById('f-cliente').value);
+            const data = document.getElementById('f-data').value;
+            const obs = up(document.getElementById('f-obs').value);
 
-            if (!cliente || !data) { alert("ERRO: CLIENTE E DATA SÃO OBRIGATÓRIOS!"); return; }
+            if(!cliente || !data) { alert("PREENCHA CLIENTE E DATA!"); return; }
 
-            let produtos = [];
+            let listaItens = [];
             document.querySelectorAll('.grid-prod').forEach(linha => {
-                const inputs = linha.querySelectorAll('input');
-                if (inputs[0].value) {
-                    produtos.push({
-                        p: limpar(inputs[0].value),
-                        q: inputs[1].value || 1,
-                        v: inputs[2].value || 0
-                    });
-                }
+                const id = linha.id;
+                const p = up(document.getElementById(`p-${id}`).value);
+                const q = document.getElementById(`q-${id}`).value;
+                const v = document.getElementById(`v-${id}`).value;
+                if(p) listaItens.push({ produto: p, qtd: q, valor: v });
             });
 
-            database.ref('pedidos').push({
-                cliente, data, obs, produtos,
-                status: 'PENDENTE',
-                criadoEm: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => {
-                alert("SUCESSO: PEDIDO REGISTRADO!");
-                window.location.reload();
-            });
+            const novoPedido = { cliente, data, obs, itens: listaItens, status: "PENDENTE" };
+
+            db.ref('pedidos').push(novoPedido)
+                .then(() => {
+                    alert("SALVO COM SUCESSO!");
+                    document.getElementById('itens').innerHTML = "";
+                    document.getElementById('f-obs').value = "";
+                    addLinha();
+                })
+                .catch(erro => alert("ERRO AO SALVAR: " + erro.message));
         }
 
-        // Atualização em Tempo Real
-        database.ref('pedidos').on('value', snap => {
+        // MOSTRAR PEDIDOS E ATUALIZAR LISTA DE CLIENTES
+        db.ref('pedidos').on('value', snap => {
+            const listaDiv = document.getElementById('lista-pedidos');
+            const selectCli = document.getElementById('f-cliente');
             const dados = snap.val();
-            const container = document.getElementById('exibicao-pedidos');
-            const listaClientes = document.getElementById('campo-cliente');
-            container.innerHTML = "";
+            listaDiv.innerHTML = "";
             
-            if (dados) {
-                const itens = Object.keys(dados).map(k => ({...dados[k], id: k})).reverse();
+            if(dados) {
+                const pedidos = Object.keys(dados).map(k => ({...dados[k], id: k})).reverse();
                 
-                // Atualiza Clientes Únicos
-                const nomes = [...new Set(itens.map(i => i.cliente))].sort();
-                const cliAtual = listaClientes.value;
-                listaClientes.innerHTML = '<option value="">SELECIONE...</option><option value="NO">+ CADASTRAR NOVO CLIENTE</option>';
+                // Atualizar nomes no Select
+                const nomes = [...new Set(pedidos.map(p => p.cliente))].sort();
+                const atual = selectCli.value;
+                selectCli.innerHTML = '<option value="">SELECIONE O CLIENTE</option><option value="ADD">+ ADICIONAR NOVO CLIENTE</option>';
                 nomes.forEach(n => {
                     let o = document.createElement("option"); o.value = n; o.text = n;
-                    if(n === cliAtual) o.selected = true;
-                    listaClientes.add(o);
+                    if(n === atual) o.selected = true;
+                    selectCli.add(o);
                 });
 
-                itens.forEach(p => {
-                    container.innerHTML += `
-                        <div class="pedido-card">
-                            <button class="btn-del" onclick="apagar('${p.id}')">✕</button>
-                            <div style="font-size:11px; color:#888;">${p.data}</div>
-                            <div style="font-weight:bold; font-size:16px; margin:5px 0;">${p.cliente}</div>
-                            <div style="font-size:13px; color:#555;">${p.produtos ? p.produtos.map(pr => pr.p).join(', ') : ''}</div>
+                pedidos.forEach(p => {
+                    listaDiv.innerHTML += `
+                        <div class="item-pedido">
+                            <strong>${p.cliente}</strong> <br>
+                            ${p.data} <br>
+                            <small>${p.itens ? p.itens.map(i => i.produto).join(', ') : ''}</small>
+                            <button style="background:red; width:80px; padding:5px; float:right;" onclick="excluir('${p.id}')">APAGAR</button>
+                            <div style="clear:both;"></div>
                         </div>
                     `;
                 });
-
-                // Alerta Sonoro
-                if (totalLocal !== -1 && itens.length > totalLocal) {
-                    somAviso.play().catch(() => {});
-                    document.getElementById('notificacao').style.display = 'block';
-                    setTimeout(() => { document.getElementById('notificacao').style.display = 'none'; }, 5000);
-                }
-                totalLocal = itens.length;
             }
         });
 
-        function apagar(id) { if(confirm("DESEJA EXCLUIR ESTE PEDIDO?")) database.ref('pedidos/'+id).remove(); }
+        function excluir(id) { if(confirm("EXCLUIR?")) db.ref('pedidos/'+id).remove(); }
 
-        document.getElementById('campo-data').valueAsDate = new Date();
-        novaLinha();
+        document.getElementById('f-data').valueAsDate = new Date();
+        addLinha();
     </script>
 </body>
 </html>
