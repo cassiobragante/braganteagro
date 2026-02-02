@@ -46,27 +46,10 @@
         .btn-main { background: var(--verde-escuro); color: white; padding: 14px; width: 100%; margin-top: 10px; font-size: 13px; }
         .btn-add { background: transparent; color: var(--verde-claro); border: 1px dashed var(--verde-claro); padding: 9px; margin-bottom: 12px; width: 100%; }
         
-        /* Estilização dos Badges de Status */
         .status-container { margin-top: 12px; display: flex; gap: 8px; }
-        .badge {
-            font-size: 9px;
-            font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            border: 1px solid;
-            display: inline-block;
-        }
-        .badge-pendente {
-            background-color: #f1f5f9;
-            color: #64748b;
-            border-color: #cbd5e1;
-        }
-        .badge-sucesso {
-            background-color: #f0fdf4;
-            color: #166534;
-            border-color: #bbf7d0;
-        }
+        .badge { font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; border: 1px solid; display: inline-block; }
+        .badge-pendente { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; }
+        .badge-sucesso { background-color: #f0fdf4; color: #166534; border-color: #bbf7d0; }
 
         .pedido-item { background: white; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--neutro-borda); position: relative; border-left-width: 6px; border-left-style: solid; }
         .btn-del { position: absolute; top: 10px; right: 10px; color: #cbd5e1; font-size: 16px; background: none; width: auto; }
@@ -158,6 +141,11 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // Função para deixar primeira letra maiúscula
+        function formatarNome(texto) {
+            return texto.toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letra => letra.toUpperCase());
+        }
+
         function adicionarLinhaProduto(p="", q=1, v="") {
             contadorProdutos++;
             const div = document.createElement('div');
@@ -172,8 +160,26 @@
             document.getElementById('container-produtos').appendChild(div);
         }
         function removerLinha(id) { if(document.getElementById(`linha-${id}`)) document.getElementById(`linha-${id}`).remove(); }
-        function verificarOutros(s) { if (s.value === "Outros") { const d = prompt("Qual o produto?"); if (d) { const n = document.createElement("option"); n.value = d; n.text = d; n.selected = true; s.add(n); } else { s.value = ""; } } }
-        function verificarNovoCliente(s) { if (s.value === "NOVO_CLIENTE") { const n = prompt("Nome do novo cliente:"); if (n && n.trim() !== "") { const o = document.createElement("option"); o.value = n.trim(); o.text = n.trim(); o.selected = true; s.add(o); } else { s.value = ""; } } }
+        
+        function verificarOutros(s) { 
+            if (s.value === "Outros") { 
+                let d = prompt("Qual o produto?"); 
+                if (d) { 
+                    d = formatarNome(d);
+                    const n = document.createElement("option"); n.value = d; n.text = d; n.selected = true; s.add(n); 
+                } else { s.value = ""; } 
+            } 
+        }
+
+        function verificarNovoCliente(s) { 
+            if (s.value === "NOVO_CLIENTE") { 
+                let n = prompt("Nome do novo cliente:"); 
+                if (n && n.trim() !== "") { 
+                    n = formatarNome(n.trim());
+                    const o = document.createElement("option"); o.value = n; o.text = n; o.selected = true; s.add(o); 
+                } else { s.value = ""; } 
+            } 
+        }
 
         function salvarPedido() {
             const idEdit = document.getElementById('edit-id').value;
@@ -225,8 +231,6 @@
             });
             filtrados.forEach(p => {
                 let corBorda = p.entrega === 'Entregue' ? (p.pagamento === 'Pago' ? "var(--verde-claro)" : "var(--vermelho-alerta)") : "var(--cinza-pendente)";
-                
-                // Lógica de cores dos Badges
                 let classeEntrega = p.entrega === 'Entregue' ? 'badge-sucesso' : 'badge-pendente';
                 let classePgto = p.pagamento === 'Pago' ? 'badge-sucesso' : 'badge-pendente';
 
@@ -253,12 +257,29 @@
         function cancelarEdicao() { document.getElementById('edit-id').value = ""; document.getElementById('cliente').value = ""; document.getElementById('descricao').value = ""; document.getElementById('container-produtos').innerHTML = ""; adicionarLinhaProduto(); document.getElementById('btn-cancelar').style.display = 'none'; }
         function prepararEdicao(id) { const p = todosPedidos.find(x => x.id === id); document.getElementById('edit-id').value = p.id; document.getElementById('cliente').value = p.cliente; document.getElementById('data').value = p.data; document.getElementById('descricao').value = p.descricao || ""; document.getElementById('container-produtos').innerHTML = ""; p.itens.forEach(i => adicionarLinhaProduto(i.produto, i.qtd, i.preco)); document.getElementById('btn-cancelar').style.display = 'block'; window.scrollTo({top:0, behavior:'smooth'}); }
         function excluirPedido(id) { if(confirm("Excluir?")) db.ref('pedidos/'+id).remove(); }
-        function confirmarEntrega(id) { const p = todosPedidos.find(x=>x.id===id); if(p.entrega==='Entregue') db.ref('pedidos/'+id).update({entrega:'Pendente'}); else { db.ref('pedidos/'+id).update({entrega:'Entregue'}); if(p.pagamento==='Pendente' && confirm("Pago?")) abrirModal(id); } }
-        function gerenciarPgto(id) { const p = todosPedidos.find(x=>x.id===id); if(p.pagamento==='Pago') db.ref('pedidos/'+id).update({pagamento:'Pendente', formaPg:''}); else abrirModal(id); }
+        
+        function confirmarEntrega(id) { 
+            const p = todosPedidos.find(x=>x.id===id); 
+            if(p.entrega==='Entregue') {
+                db.ref('pedidos/'+id).update({entrega:'Pendente'}); 
+            } else {
+                if(confirm("Confirmar a entrega deste pedido?")) {
+                    db.ref('pedidos/'+id).update({entrega:'Entregue'}); 
+                    if(p.pagamento==='Pendente' && confirm("O pedido foi pago?")) abrirModal(id);
+                }
+            }
+        }
+        
+        function gerenciarPgto(id) { 
+            const p = todosPedidos.find(x=>x.id===id); 
+            if(p.pagamento==='Pago') db.ref('pedidos/'+id).update({pagamento:'Pendente', formaPg:''}); 
+            else abrirModal(id); 
+        }
+        
         function abrirModal(id) { pedidoEmPagamento = id; document.getElementById('modalPagamento').style.display='flex'; }
         function fecharModal() { document.getElementById('modalPagamento').style.display='none'; }
         function selecionarForma(f) { db.ref('pedidos/'+pedidoEmPagamento).update({pagamento:'Pago', formaPg:f}); fecharModal(); }
-        function selecionarOutros() { const d = prompt("Qual?"); if (d) selecionarForma(d); }
+        function selecionarOutros() { let d = prompt("Qual?"); if (d) selecionarForma(formatarNome(d)); }
         function toggleAccordion() { const p = document.getElementById("filtroPanel"); p.style.display = p.style.display === "block" ? "none" : "block"; }
         function limparFiltros() { document.getElementById('filtro-cliente').value = ""; document.getElementById('filtro-produto').value = ""; listarPedidos(); }
         
