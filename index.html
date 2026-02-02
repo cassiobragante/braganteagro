@@ -137,7 +137,6 @@
     </div>
 
     <script>
-        // ... (A lógica JavaScript permanece idêntica à anterior) ...
         const listaProdutosBase = ["Sorgo em grãos", "Sorgo triturado", "Milho", "Quirela Fina", "Quirela Grossa", "Milheto", "Ração Top Mix", "Ração Mix", "Outros"];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
 
@@ -261,6 +260,13 @@
             doc.autoTable({ head: [['Data', 'Cliente', 'Item', 'Sub']], body: rows });
             doc.text(`Total: R$ ${t.toFixed(2)}`, 14, doc.lastAutoTable.finalY + 10);
             doc.save('relatorio.pdf');
+        }
+
+        // ATIVADOR DE MODO OFFLINE (SERVICE WORKER)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+            .then(() => console.log("Modo Offline Ativo!"))
+            .catch(err => console.log("Erro no Offline:", err));
         }
 
         document.getElementById('data').valueAsDate = new Date();
