@@ -80,10 +80,7 @@
         <div class="card">
             <div class="section-title">NOVO PEDIDO</div>
             <div class="form-row">
-                <div class="col-data">
-                    <label>Data</label>
-                    <input type="date" id="data">
-                </div>
+                <div class="col-data"><label>Data</label><input type="date" id="data"></div>
                 <div class="col-cliente">
                     <label>Cliente</label>
                     <select id="cliente" onchange="verificarNovoCliente(this)">
@@ -121,7 +118,6 @@
         </div>
         
         <button class="btn-report" onclick="gerarPDF()">GERAR RELATÓRIO PDF</button>
-
         <div class="section-title" id="titulo-lista" style="margin-left:5px">Entregas Pendentes</div>
         <div id="listaPedidos"></div>
     </div>
@@ -262,11 +258,17 @@
             doc.save('relatorio.pdf');
         }
 
-        // ATIVADOR DE MODO OFFLINE (SERVICE WORKER)
+        // --- ATIVADOR DE MODO OFFLINE (SERVICE WORKER ATUALIZADO) ---
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-            .then(() => console.log("Modo Offline Ativo!"))
-            .catch(err => console.log("Erro no Offline:", err));
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                .then(reg => {
+                    console.log("Offline configurado!");
+                    // Garante que o service worker se atualize se houver novo código
+                    reg.update();
+                })
+                .catch(err => console.log("Erro no Service Worker:", err));
+            });
         }
 
         document.getElementById('data').valueAsDate = new Date();
