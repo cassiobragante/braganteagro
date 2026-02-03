@@ -20,8 +20,6 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script> 
 
     <style>
         :root {
@@ -41,7 +39,12 @@
         .header .agro { color: var(--verde-claro); }
         .header p { margin: 4px 0; font-size: 9px; color: #64748b; letter-spacing: 1px; font-weight: bold; text-transform: uppercase; }
         .card { background: #ffffff; padding: 16px; border-radius: 10px; border: 1px solid var(--neutro-borda); margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .section-title { font-size: 11px; font-weight: 700; color: var(--verde-escuro); text-transform: uppercase; margin-bottom: 12px; }
+        .section-title { font-size: 11px; font-weight: 700; color: var(--verde-escuro); text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .manage-wrapper { text-align: right; }
+        .btn-manage-list { width: 22px; height: 22px; border-radius: 4px; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; color: white; border: none; cursor: pointer; background: var(--verde-claro); }
+        .label-manage { font-size: 7px; color: var(--verde-claro); font-weight: bold; display: block; margin-top: 2px; text-align: right; }
+
         .form-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; }
         .col-data { flex: 0 0 125px; }
         .col-cliente { flex: 1; }
@@ -78,6 +81,12 @@
 
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding: 20px; }
         .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #print-section, #print-section * { visibility: visible; }
+            #print-section { position: absolute; left: 0; top: 0; width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -89,7 +98,16 @@
         </div>
 
         <div class="card">
-            <div class="section-title">NOVO PEDIDO</div>
+            <div class="section-title">
+                NOVO PEDIDO 
+                <div class="manage-wrapper">
+                    <div>
+                        <button class="btn-manage-list" onclick="gerenciarListaProdutos('add')">+</button>
+                        <button class="btn-manage-list" onclick="abrirModalExcluirProd()">-</button>
+                    </div>
+                    <span class="label-manage">EDITAR PRODUTOS</span>
+                </div>
+            </div>
             <div class="form-row">
                 <div class="col-data">
                     <label>Data</label>
@@ -131,7 +149,7 @@
             <button id="nav-todos" class="btn-nav" onclick="mudarModo('todos')">TODOS PEDIDOS</button>
         </div>
         
-        <button class="btn-report" onclick="gerarPDF()">GERAR RELATÓRIO PDF</button>
+        <button class="btn-report" onclick="gerarRelatorioImpressao()">IMPRIMIR RELATÓRIO</button>
 
         <div class="section-title" id="titulo-lista" style="margin-left:5px">Entregas Pendentes</div>
         <div id="listaPedidos"></div>
@@ -147,6 +165,18 @@
         </div>
     </div>
 
+    <div id="modalExcluirProd" class="modal">
+        <div class="modal-content">
+            <div class="section-title">Excluir da Lista</div>
+            <label>Selecione o produto para remover:</label>
+            <select id="select-excluir-prod" style="margin: 15px 0;"></select>
+            <button onclick="confirmarExclusaoProd()" class="btn-main" style="background:var(--vermelho-alerta);">EXCLUIR DEFINITIVAMENTE</button>
+            <button onclick="fecharModalExcluir()" style="background:none; color:#94a3b8; width:100%; margin-top:15px">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="print-section" style="display:none;"></div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
@@ -160,31 +190,64 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const listaProdutosBase = ["Sorgo em grãos", "Sorgo triturado", "Milho", "Quirela Fina", "Quirela Grossa", "Milheto", "Ração Top Mix", "Ração Mix", "Outros"];
+        let listaProdutosBase = [];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
 
-        /* BEEP MODERNO */
+        db.ref('configuracoes/produtos').on('value', (snap) => {
+            listaProdutosBase = [];
+            if(snap.exists()){ snap.forEach(child => { listaProdutosBase.push(child.val()); }); }
+            listaProdutosBase.sort();
+            atualizarListasMenu();
+            document.querySelectorAll('[id^="prod-"]').forEach(sel => {
+                const val = sel.value;
+                sel.innerHTML = '<option value="">Produto...</option>' + 
+                    listaProdutosBase.map(p => `<option value="${p}" ${p===val?'selected':''}>${p}</option>`).join('');
+            });
+        });
+
+        function gerenciarListaProdutos(acao) {
+            if(acao === 'add') {
+                let p = prompt("Nome do NOVO produto:");
+                if(p && p.trim() !== "") { p = formatarTexto(p.trim()); db.ref('configuracoes/produtos').push(p); }
+            }
+        }
+
+        function abrirModalExcluirProd() {
+            const sel = document.getElementById('select-excluir-prod');
+            sel.innerHTML = '<option value="">Selecione um produto...</option>' + 
+                listaProdutosBase.map(p => `<option value="${p}">${p}</option>`).join('');
+            document.getElementById('modalExcluirProd').style.display = 'flex';
+        }
+
+        function fecharModalExcluir() { document.getElementById('modalExcluirProd').style.display = 'none'; }
+
+        function confirmarExclusaoProd() {
+            const p = document.getElementById('select-excluir-prod').value;
+            if(!p) return;
+            if(confirm(`Remover "${p}" da lista?`)) {
+                db.ref('configuracoes/produtos').once('value', snap => {
+                    snap.forEach(child => { if(child.val() === p) child.ref.remove(); });
+                });
+                fecharModalExcluir();
+            }
+        }
+
         function tocarBeep() {
             try {
                 const context = new (window.AudioContext || window.webkitAudioContext)();
                 const gain = context.createGain();
                 gain.connect(context.destination);
                 gain.gain.setValueAtTime(0, context.currentTime);
-                gain.gain.linearRampToValueAtTime(0.1, context.currentTime + 0.01);
-                
+                gain.gain.linearRampToValueAtTime(0.3, context.currentTime + 0.01);
                 const playNote = (freq, start) => {
                     const osc = context.createOscillator();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq, start);
-                    osc.connect(gain);
-                    osc.start(start);
-                    osc.stop(start + 0.2);
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(freq, start);
+                    osc.connect(gain); osc.start(start); osc.stop(start + 0.2);
                 };
-
-                playNote(523.25, context.currentTime); // Nota Dó
-                playNote(659.25, context.currentTime + 0.1); // Nota Mi
+                playNote(523.25, context.currentTime); 
+                playNote(659.25, context.currentTime + 0.1); 
                 gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.4);
-            } catch (e) { console.log("Erro som:", e); }
+            } catch (e) { }
         }
 
         function formatarTexto(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
@@ -194,11 +257,10 @@
             contadorProdutos++;
             const div = document.createElement('div');
             div.className = 'grid-prod'; div.id = `linha-${contadorProdutos}`;
-            let oQ = ""; for(let i=1; i<=30; i++) oQ += `<option value="${i}" ${i == q ? 'selected' : ''}>${i}</option>`;
+            let oQ = ""; for(let i=1; i<=100; i++) oQ += `<option value="${i}" ${i == q ? 'selected' : ''}>${i}</option>`;
             let oP = `<option value="">Produto...</option>`;
             listaProdutosBase.forEach(item => { oP += `<option value="${item}" ${item === p ? 'selected' : ''}>${item}</option>`; });
-            if(p && !listaProdutosBase.includes(p)) oP += `<option value="${p}" selected>${p}</option>`;
-            div.innerHTML = `<select id="prod-${contadorProdutos}" onchange="verificarOutros(this)">${oP}</select>
+            div.innerHTML = `<select id="prod-${contadorProdutos}">${oP}</select>
                 <select id="qtd-${contadorProdutos}">${oQ}</select>
                 <input type="number" id="preco-${contadorProdutos}" value="${v}" step="0.01" placeholder="R$">
                 <button class="btn-remove-item" onclick="removerLinha(${contadorProdutos})">×</button>`;
@@ -206,18 +268,15 @@
         }
         
         function removerLinha(id) { if(document.getElementById(`linha-${id}`)) document.getElementById(`linha-${id}`).remove(); }
-        function verificarOutros(s) { if (s.value === "Outros") { const d = prompt("Qual o produto?"); if (d) { const n = document.createElement("option"); n.value = d; n.text = d; n.selected = true; s.add(n); } else { s.value = ""; } } }
 
         function salvarPedido() {
-            // DELAY DE 3 SEGUNDOS PARA O BEEP
-            setTimeout(tocarBeep, 3000);
-
+            tocarBeep();
+            setTimeout(tocarBeep, 4000);
             const idEdit = document.getElementById('edit-id').value;
             const cliente = document.getElementById('cliente').value;
             const data = document.getElementById('data').value;
             let obs = document.getElementById('descricao').value;
             if(!cliente || !data || cliente === "NOVO_CLIENTE") return alert("Preencha cliente e data");
-            if(obs) obs = formatarTexto(obs);
             let itens = [], total = 0;
             document.querySelectorAll('.grid-prod').forEach(l => {
                 const idNum = l.id.split('-')[1];
@@ -230,7 +289,7 @@
                 }
             });
             if(itens.length === 0) return alert("Adicione um item");
-            const dados = { data, cliente, itens, total, descricao: obs, timestamp: firebase.database.ServerValue.TIMESTAMP };
+            const dados = { data, cliente, itens, total, descricao: obs || "", timestamp: firebase.database.ServerValue.TIMESTAMP };
             if(idEdit) db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => { cancelarEdicao(); });
             else { const nid = db.ref('pedidos').push().key; db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false}).then(() => { cancelarEdicao(); }); }
         }
@@ -243,12 +302,11 @@
 
         function atualizarListasMenu() {
             const sc = document.getElementById('cliente'), fc = document.getElementById('filtro-cliente'), fp = document.getElementById('filtro-produto'), val = sc.value;
-            const cSet = new Set();
-            todosPedidos.forEach(p => { if(p.cliente) cSet.add(p.cliente); });
+            const cSet = new Set(); todosPedidos.forEach(p => { if(p.cliente) cSet.add(p.cliente); });
             sc.innerHTML = '<option value="">Selecione...</option><option value="NOVO_CLIENTE">+ NOVO CLIENTE...</option>';
             [...cSet].sort().forEach(c => { const o = document.createElement('option'); o.value = c; o.text = c; if(c === val) o.selected = true; sc.add(o); });
             fc.innerHTML = '<option value="">Todos</option>'; [...cSet].sort().forEach(c => { fc.innerHTML += `<option value="${c}">${c}</option>`; });
-            fp.innerHTML = '<option value="">Todos</option>'; listaProdutosBase.forEach(p => { if(p !== "Outros") fp.innerHTML += `<option value="${p}">${p}</option>`; });
+            fp.innerHTML = '<option value="">Todos</option>'; listaProdutosBase.forEach(p => { fp.innerHTML += `<option value="${p}">${p}</option>`; });
         }
 
         function listarPedidos() {
@@ -259,30 +317,26 @@
             const filtrados = todosPedidos.filter(p => {
                 let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
                 let pC = fC === "" || p.cliente === fC;
-                let pP = fP === "" || p.itens.some(i => i.produto === fP);
+                let pP = fP === "" || (p.itens && p.itens.some(i => i.produto === fP));
                 let pD = (!fI || p.data >= fI) && (!fF || p.data <= fF);
                 return pM && pC && pP && pD;
             });
             filtrados.forEach(p => {
                 let entOk = p.entrega === 'Entregue';
                 let pagOk = p.pagamento === 'Pago';
-                
-                // SELO NOVO SÓ APARECE SE FOR RECENTE E AMBOS PENDENTES
                 let isNovo = (agora - p.timestamp < 86400000) && p.entrega === 'Pendente' && p.pagamento === 'Pendente';
-                
                 let cor = entOk ? (pagOk ? "var(--verde-claro)" : "var(--vermelho-alerta)") : "var(--cinza-pendente)";
-                
                 lista.innerHTML += `<div class="pedido-item" style="border-left-color: ${cor}">
                     ${isNovo ? '<span class="badge-novo">NOVO</span>' : ''}
                     <button class="btn-del" onclick="excluirPedido('${p.id}')">✕</button>
                     <div style="font-size:10px; color:#94a3b8;">${p.data.split('-').reverse().join('/')}</div>
                     <div style="font-weight:700; font-size:15px; margin:3px 0;">${p.cliente}</div>
-                    <div style="font-size:12px; color:#475569;">${p.itens.map(i=>`${i.qtd}x ${i.produto}`).join(', ')}</div>
+                    <div style="font-size:12px; color:#475569;">${(p.itens||[]).map(i=>`${i.qtd}x ${i.produto}`).join(', ')}</div>
                     ${p.descricao ? `<div style="font-size:10px; color:var(--verde-claro); font-style:italic;">Obs: ${p.descricao}</div>` : ''}
                     <div class="status-container">
                         <span class="tag ${entOk?'tag-verde':''}">ENTREGA: ${p.entrega}</span>
                         <span class="tag ${pagOk?'tag-verde':''}">PGTO: ${p.pagamento} ${p.formaPg?`(${p.formaPg})`:''}</span>
-                        ${p.editado ? '<span class="tag tag-editado">EDITADO</span>' : ''}
+                        ${p.editado ? `<span class="tag tag-editado">EDITADO</span>` : ''}
                     </div>
                     <div class="total-row"><span class="total-val">R$ ${p.total.toFixed(2)}</span></div>
                     <div class="actions">
@@ -294,84 +348,88 @@
             });
         }
 
-        function mudarModo(m) { modoAtual = m; document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active')); document.getElementById('nav-' + m).classList.add('active'); listarPedidos(); }
-        function cancelarEdicao() { document.getElementById('edit-id').value = ""; document.getElementById('cliente').value = ""; document.getElementById('descricao').value = ""; document.getElementById('container-produtos').innerHTML = ""; adicionarLinhaProduto(); document.getElementById('btn-cancelar').style.display = 'none'; }
-        function prepararEdicao(id) { const p = todosPedidos.find(x => x.id === id); document.getElementById('edit-id').value = p.id; document.getElementById('cliente').value = p.cliente; document.getElementById('data').value = p.data; document.getElementById('descricao').value = p.descricao || ""; document.getElementById('container-produtos').innerHTML = ""; p.itens.forEach(i => adicionarLinhaProduto(i.produto, i.qtd, i.preco)); document.getElementById('btn-cancelar').style.display = 'block'; window.scrollTo({top:0, behavior:'smooth'}); }
-        function excluirPedido(id) { if(confirm("Excluir?")) db.ref('pedidos/'+id).remove(); }
-        
-        function confirmarEntrega(id) { 
-            const p = todosPedidos.find(x=>x.id===id); 
-            if(p.entrega==='Entregue') { if(confirm("Deseja ESTORNAR a entrega?")) db.ref('pedidos/'+id).update({entrega:'Pendente'}); }
-            else { if(confirm("O pedido foi entregue?")) { db.ref('pedidos/'+id).update({entrega:'Entregue'}); if(p.pagamento==='Pendente' && confirm("O pedido já foi pago?")) abrirModal(id); } } 
+        function gerarRelatorioImpressao() {
+            const fC = document.getElementById('filtro-cliente').value;
+            const fP = document.getElementById('filtro-produto').value;
+            const fI = document.getElementById('filtro-inicio').value;
+            const fF = document.getElementById('filtro-fim').value;
+
+            // Filtra exatamente os pedidos que estão sendo exibidos na tela
+            const filtrados = todosPedidos.filter(p => {
+                let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
+                let pC = fC === "" || p.cliente === fC;
+                let pP = fP === "" || (p.itens && p.itens.some(i => i.produto === fP));
+                let pD = (!fI || p.data >= fI) && (!fF || p.data <= fF);
+                return pM && pC && pP && pD;
+            });
+
+            if(filtrados.length === 0) return alert("Nenhum pedido nos filtros atuais.");
+
+            let totalValor = 0, totalQtd = 0, htmlRows = "";
+            filtrados.forEach(p => {
+                p.itens.forEach(i => {
+                    // Se houver filtro de produto, soma apenas aquele produto
+                    if (fP === "" || i.produto === fP) {
+                        const sub = i.qtd * i.preco;
+                        totalValor += sub; 
+                        totalQtd += i.qtd;
+                        htmlRows += `<tr>
+                            <td>${p.data.split('-').reverse().join('/')}</td>
+                            <td>${p.cliente}</td>
+                            <td>${i.produto}</td>
+                            <td>${i.qtd}</td>
+                            <td>R$ ${i.preco.toFixed(2)}</td>
+                            <td>R$ ${sub.toFixed(2)}</td>
+                        </tr>`;
+                    }
+                });
+            });
+
+            const printDiv = document.getElementById('print-section');
+            printDiv.innerHTML = `
+                <div style="padding:40px; font-family:sans-serif; color:#000;">
+                    <h2 style="text-align:center; color:#0a3d1d; margin-bottom:5px;">BRAGANTE AGRO</h2>
+                    <p style="text-align:center; font-size:12px; margin-top:0;">Relatório de Pedidos - Gerado em ${new Date().toLocaleDateString()}</p>
+                    <p style="font-size:10px; margin-bottom:15px;">Filtros Aplicados: Cliente [${fC||'Todos'}] | Produto [${fP||'Todos'}] | Modo [${modoAtual.toUpperCase()}]</p>
+                    <hr>
+                    <table border="1" cellspacing="0" cellpadding="8" style="width:100%; border-collapse:collapse; margin-top:20px; font-size:12px;">
+                        <thead><tr style="background:#f1f5f9;"><th>Data</th><th>Cliente</th><th>Produto</th><th>Qtd</th><th>Unit.</th><th>Subtotal</th></tr></thead>
+                        <tbody>${htmlRows}</tbody>
+                        <tfoot><tr style="font-weight:bold; background:#f8fafc;"><td colspan="3" align="right">TOTAIS:</td><td>${totalQtd}</td><td>-</td><td>R$ ${totalValor.toFixed(2)}</td></tr></tfoot>
+                    </table>
+                </div>`;
+            
+            // Pequeno delay para garantir que o HTML foi renderizado antes de imprimir
+            setTimeout(() => { window.print(); }, 500);
         }
 
-        function gerenciarPgto(id) { const p = todosPedidos.find(x=>x.id===id); if(p.pagamento==='Pago') { if(confirm("Deseja ESTORNAR o pagamento?")) db.ref('pedidos/'+id).update({pagamento:'Pendente', formaPg:''}); } else abrirModal(id); }
+        function confirmarEntrega(id) {
+            const p = todosPedidos.find(x=>x.id===id);
+            if(p.entrega === 'Entregue') {
+                if(confirm("Deseja estornar a entrega para PENDENTE?")) {
+                    db.ref('pedidos/'+id).update({entrega:'Pendente'});
+                }
+            } else {
+                if(confirm("O pedido foi entregue?")) {
+                    db.ref('pedidos/'+id).update({entrega:'Entregue'});
+                    if(p.pagamento === 'Pendente' && confirm("O pedido já foi pago?")) {
+                        abrirModal(id);
+                    }
+                }
+            }
+        }
+
+        function mudarModo(m) { modoAtual = m; document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active')); document.getElementById('nav-' + m).classList.add('active'); listarPedidos(); }
+        function cancelarEdicao() { document.getElementById('edit-id').value = ""; document.getElementById('cliente').value = ""; document.getElementById('descricao').value = ""; document.getElementById('container-produtos').innerHTML = ""; adicionarLinhaProduto(); document.getElementById('btn-cancelar').style.display = 'none'; }
+        function prepararEdicao(id) { const p = todosPedidos.find(x => x.id === id); document.getElementById('edit-id').value = p.id; document.getElementById('cliente').value = p.cliente; document.getElementById('data').value = p.data; document.getElementById('descricao').value = p.descricao || ""; document.getElementById('container-produtos').innerHTML = ""; (p.itens||[]).forEach(i => adicionarLinhaProduto(i.produto, i.qtd, i.preco)); document.getElementById('btn-cancelar').style.display = 'block'; window.scrollTo({top:0, behavior:'smooth'}); }
+        function excluirPedido(id) { if(confirm("Excluir?")) db.ref('pedidos/'+id).remove(); }
+        function gerenciarPgto(id) { const p = todosPedidos.find(x=>x.id===id); if(p.pagamento==='Pago') { db.ref('pedidos/'+id).update({pagamento:'Pendente', formaPg:''}); } else abrirModal(id); }
         function abrirModal(id) { pedidoEmPagamento = id; document.getElementById('modalPagamento').style.display='flex'; }
         function fecharModal() { document.getElementById('modalPagamento').style.display='none'; }
         function selecionarForma(f) { db.ref('pedidos/'+pedidoEmPagamento).update({pagamento:'Pago', formaPg:f}); fecharModal(); }
         function selecionarOutros() { const d = prompt("Qual?"); if (d) selecionarForma(d); }
         function toggleAccordion() { const p = document.getElementById("filtroPanel"); p.style.display = p.style.display === "block" ? "none" : "block"; }
         function limparFiltros() { document.getElementById('filtro-cliente').value = ""; document.getElementById('filtro-produto').value = ""; document.getElementById('filtro-inicio').value = ""; document.getElementById('filtro-fim').value = ""; listarPedidos(); }
-        
-        function gerarPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const fC = document.getElementById('filtro-cliente').value;
-            const fP = document.getElementById('filtro-produto').value;
-            const fI = document.getElementById('filtro-inicio').value;
-            const fF = document.getElementById('filtro-fim').value;
-
-            let totalGeral = 0;
-            let qtdGeral = 0;
-            const rows = [];
-
-            const filtrados = todosPedidos.filter(p => {
-                let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
-                let pC = fC === "" || p.cliente === fC;
-                let pP = fP === "" || p.itens.some(i => i.produto === fP);
-                let pD = (!fI || p.data >= fI) && (!fF || p.data <= fF);
-                return pM && pC && pP && pD;
-            });
-
-            filtrados.forEach(p => {
-                p.itens.forEach(i => {
-                    if (fP === "" || i.produto === fP) {
-                        const sub = i.qtd * i.preco;
-                        totalGeral += sub;
-                        qtdGeral += i.qtd;
-                        rows.push([
-                            p.data.split('-').reverse().join('/'), 
-                            p.cliente, 
-                            i.produto, 
-                            i.qtd, 
-                            `R$ ${i.preco.toFixed(2)}`, 
-                            `R$ ${sub.toFixed(2)}`
-                        ]);
-                    }
-                });
-            });
-
-            doc.setFontSize(16);
-            doc.text("Relatório de Pedidos - Bragante Agro", 14, 15);
-            doc.setFontSize(10);
-            doc.text(`Filtros: Cliente [${fC || 'Todos'}] | Produto [${fP || 'Todos'}]`, 14, 22);
-
-            doc.autoTable({
-                head: [['Data', 'Cliente', 'Produto', 'Qtd', 'Unit.', 'Subtotal']],
-                body: rows,
-                startY: 28,
-                theme: 'grid',
-                headStyles: { fillColor: [10, 61, 29] }
-            });
-
-            const finalY = doc.lastAutoTable.finalY + 10;
-            doc.setFontSize(12);
-            doc.setFont(undefined, 'bold');
-            doc.text(`QUANTIDADE TOTAL DE ITENS: ${qtdGeral}`, 14, finalY);
-            doc.text(`VALOR TOTAL DO RELATÓRIO: R$ ${totalGeral.toFixed(2)}`, 14, finalY + 7);
-
-            doc.save(`relatorio_${new Date().getTime()}.pdf`);
-        }
 
         document.getElementById('data').valueAsDate = new Date();
         adicionarLinhaProduto();
