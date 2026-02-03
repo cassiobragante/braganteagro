@@ -70,11 +70,9 @@
         .actions { display: flex; gap: 6px; margin-top: 12px; }
         .btn-mini { flex: 1; padding: 10px; font-size: 10px; background: #f8fafc; border: 1px solid var(--neutro-borda); color: #475569; }
         
-        /* NOVAS CORES DOS BOTÕES ATIVOS */
         .btn-active-delivery { background: var(--verde-claro) !important; color: white !important; border-color: var(--verde-claro) !important; }
         .btn-active-pay { background: #1e40af !important; color: white !important; border-color: #1e40af !important; }
         
-        /* SELO NOVO */
         .badge-novo { background: #f59e0b; color: white; font-size: 8px; padding: 2px 6px; border-radius: 10px; position: absolute; top: 10px; right: 40px; animation: pulse 2s infinite; font-weight: 900; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
@@ -165,19 +163,27 @@
         const listaProdutosBase = ["Sorgo em grãos", "Sorgo triturado", "Milho", "Quirela Fina", "Quirela Grossa", "Milheto", "Ração Top Mix", "Ração Mix", "Outros"];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
 
-        /* FUNÇÃO BEEP */
+        /* BEEP MODERNO */
         function tocarBeep() {
             try {
                 const context = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = context.createOscillator();
                 const gain = context.createGain();
-                oscillator.connect(gain);
                 gain.connect(context.destination);
-                oscillator.type = 'sine';
-                oscillator.frequency.value = 880;
-                gain.gain.setValueAtTime(0.1, context.currentTime);
-                oscillator.start();
-                oscillator.stop(context.currentTime + 0.2);
+                gain.gain.setValueAtTime(0, context.currentTime);
+                gain.gain.linearRampToValueAtTime(0.1, context.currentTime + 0.01);
+                
+                const playNote = (freq, start) => {
+                    const osc = context.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, start);
+                    osc.connect(gain);
+                    osc.start(start);
+                    osc.stop(start + 0.2);
+                };
+
+                playNote(523.25, context.currentTime); // Nota Dó
+                playNote(659.25, context.currentTime + 0.1); // Nota Mi
+                gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.4);
             } catch (e) { console.log("Erro som:", e); }
         }
 
@@ -203,7 +209,9 @@
         function verificarOutros(s) { if (s.value === "Outros") { const d = prompt("Qual o produto?"); if (d) { const n = document.createElement("option"); n.value = d; n.text = d; n.selected = true; s.add(n); } else { s.value = ""; } } }
 
         function salvarPedido() {
-            tocarBeep(); // DISPARA BEEP AO SALVAR
+            // DELAY DE 3 SEGUNDOS PARA O BEEP
+            setTimeout(tocarBeep, 3000);
+
             const idEdit = document.getElementById('edit-id').value;
             const cliente = document.getElementById('cliente').value;
             const data = document.getElementById('data').value;
@@ -258,7 +266,10 @@
             filtrados.forEach(p => {
                 let entOk = p.entrega === 'Entregue';
                 let pagOk = p.pagamento === 'Pago';
-                let isNovo = (agora - p.timestamp < 86400000); // 24 HORAS
+                
+                // SELO NOVO SÓ APARECE SE FOR RECENTE E AMBOS PENDENTES
+                let isNovo = (agora - p.timestamp < 86400000) && p.entrega === 'Pendente' && p.pagamento === 'Pendente';
+                
                 let cor = entOk ? (pagOk ? "var(--verde-claro)" : "var(--vermelho-alerta)") : "var(--cinza-pendente)";
                 
                 lista.innerHTML += `<div class="pedido-item" style="border-left-color: ${cor}">
