@@ -41,7 +41,6 @@
         .header .agro { color: var(--verde-claro); }
         .header p { margin: 4px 0; font-size: 9px; color: #64748b; letter-spacing: 1px; font-weight: bold; text-transform: uppercase; }
         
-        /* ALTERAÇÃO: Fonte moderna para PEDIDOS */
         .header .form-title { 
             font-family: 'Montserrat', sans-serif;
             font-size: 18px; 
@@ -209,6 +208,7 @@
 
         let listaProdutosBase = [];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
+        let primeiraCarga = true; // Variável para controlar o som inicial
 
         db.ref('configuracoes/produtos').on('value', (snap) => {
             listaProdutosBase = [];
@@ -249,7 +249,6 @@
             }
         }
 
-        /* ALTERAÇÃO: Novo som moderno de confirmação (Duo-Tone) */
         function tocarBeep() {
             try {
                 const context = new (window.AudioContext || window.webkitAudioContext)();
@@ -267,7 +266,6 @@
                     osc.stop(start + duration);
                 };
 
-                // Som moderno estilo notificação (Notas harmônicas)
                 playNote(440, context.currentTime, 0.1); 
                 playNote(880, context.currentTime + 0.08, 0.2); 
 
@@ -295,9 +293,6 @@
         function removerLinha(id) { if(document.getElementById(`linha-${id}`)) document.getElementById(`linha-${id}`).remove(); }
 
         function salvarPedido() {
-            tocarBeep();
-            setTimeout(tocarBeep, 4000); 
-            
             const idEdit = document.getElementById('edit-id').value;
             const cliente = document.getElementById('cliente').value;
             const data = document.getElementById('data').value;
@@ -319,6 +314,19 @@
             if(idEdit) db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => { cancelarEdicao(); });
             else { const nid = db.ref('pedidos').push().key; db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false}).then(() => { cancelarEdicao(); }); }
         }
+
+        // --- MONITORIZAÇÃO DE NOVOS PEDIDOS PARA SOM EM TODOS OS DISPOSITIVOS ---
+        db.ref('pedidos').limitToLast(1).on('child_added', (snapshot) => {
+            if (primeiraCarga) {
+                primeiraCarga = false;
+                return;
+            }
+            const novoPedido = snapshot.val();
+            if (novoPedido && !novoPedido.editado) {
+                tocarBeep();
+                setTimeout(tocarBeep, 1000); 
+            }
+        });
 
         db.ref('pedidos').on('value', (snap) => {
             todosPedidos = []; snap.forEach(c => { todosPedidos.push(c.val()); });
