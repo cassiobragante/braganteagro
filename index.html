@@ -268,6 +268,7 @@
         function toggleAccordion() { const p = document.getElementById("filtroPanel"); p.style.display = p.style.display === "block" ? "none" : "block"; }
         function limparFiltros() { document.getElementById('filtro-cliente').value = ""; document.getElementById('filtro-produto').value = ""; document.getElementById('filtro-inicio').value = ""; document.getElementById('filtro-fim').value = ""; listarPedidos(); }
         
+        // NOVO RELATÓRIO INTELIGENTE
         function gerarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -276,9 +277,11 @@
             const fI = document.getElementById('filtro-inicio').value;
             const fF = document.getElementById('filtro-fim').value;
 
-            let totalGeral = 0, qtdGeral = 0;
+            let totalGeral = 0;
+            let qtdGeral = 0;
             const rows = [];
 
+            // Filtra os pedidos conforme a tela
             const filtrados = todosPedidos.filter(p => {
                 let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
                 let pC = fC === "" || p.cliente === fC;
@@ -287,17 +290,27 @@
                 return pM && pC && pP && pD;
             });
 
+            // Processa item por item dos pedidos filtrados
             filtrados.forEach(p => {
                 p.itens.forEach(i => {
+                    // Se houver filtro de produto, só adiciona se for o produto buscado
                     if (fP === "" || i.produto === fP) {
                         const sub = i.qtd * i.preco;
                         totalGeral += sub;
                         qtdGeral += i.qtd;
-                        rows.push([p.data.split('-').reverse().join('/'), p.cliente, i.produto, i.qtd, `R$ ${i.preco.toFixed(2)}`, `R$ ${sub.toFixed(2)}`]);
+                        rows.push([
+                            p.data.split('-').reverse().join('/'), 
+                            p.cliente, 
+                            i.produto, 
+                            i.qtd, 
+                            `R$ ${i.preco.toFixed(2)}`, 
+                            `R$ ${sub.toFixed(2)}`
+                        ]);
                     }
                 });
             });
 
+            // Cabeçalho do PDF
             doc.setFontSize(16);
             doc.text("Relatório de Pedidos - Bragante Agro", 14, 15);
             doc.setFontSize(10);
