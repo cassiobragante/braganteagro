@@ -2,77 +2,250 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRAGANTE AGRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BRAGANTE AGRO - COMPLETO</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script> 
 
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
-        .bloco { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        input { 
-            width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; 
-            font-size: 16px; box-sizing: border-box; text-transform: uppercase; 
+        :root { --verde: #0a3d1d; --claro: #2e7d32; --bg: #f8fafc; --borda: #cbd5e1; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+        .app-container { max-width: 500px; margin: auto; }
+        
+        /* CABEÇALHO */
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 900; color: var(--verde); text-transform: uppercase; }
+        
+        /* CARD DE LANÇAMENTO */
+        .card { background: white; padding: 16px; border-radius: 12px; border: 1px solid var(--borda); margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .title { font-size: 12px; font-weight: bold; color: var(--verde); text-transform: uppercase; margin-bottom: 15px; }
+        
+        /* INPUTS - FORÇA MAIÚSCULA */
+        input, select, textarea { 
+            width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid var(--borda); 
+            font-size: 16px; box-sizing: border-box; outline: none;
+            text-transform: uppercase; /* Força visualmente */
         }
-        button { width: 100%; padding: 15px; background: #0a3d1d; color: white; border: none; font-weight: bold; border-radius: 5px; }
-        .item { background: #fff; padding: 10px; margin-top: 10px; border-left: 5px solid #0a3d1d; border-radius: 5px; }
+        
+        /* BOTÕES */
+        .btn-main { background: var(--verde); color: white; padding: 15px; width: 100%; border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-add { background: transparent; color: var(--claro); border: 1px dashed var(--claro); padding: 10px; width: 100%; border-radius: 8px; margin-bottom: 10px; }
+        
+        /* LISTA DE PEDIDOS */
+        .pedido-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--borda); border-left: 6px solid #64748b; position: relative; }
+        .grid-prod { display: grid; grid-template-columns: 2fr 1fr 1fr 35px; gap: 8px; margin-bottom: 8px; align-items: center; }
+        
+        /* STATUS E PDF */
+        .badge { font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; margin-right: 5px; }
+        .pago { background: #dcfce7; color: #166534; }
+        .pendente { background: #fee2e2; color: #991b1b; }
+        .btn-pdf { background: #64748b; color: white; padding: 10px; border-radius: 8px; width: 100%; margin-bottom: 20px; border: none; }
+        
+        #alerta-novo { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--claro); color: white; padding: 12px 25px; border-radius: 30px; font-weight: bold; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
-    <div class="bloco">
-        <h2 style="color:#0a3d1d">NOVO PEDIDO</h2>
-        <input type="date" id="data">
-        <input type="text" id="cliente" placeholder="NOME DO CLIENTE" oninput="this.value = this.value.toUpperCase()">
-        <input type="text" id="produto" placeholder="PRODUTO" oninput="this.value = this.value.toUpperCase()">
-        <button onclick="salvar()">SALVAR PEDIDO</button>
+    <div id="alerta-novo">🔔 NOVO PEDIDO RECEBIDO!</div>
+
+    <div class="app-container">
+        <div class="header">
+            <h1>BRAGANTE AGRO</h1>
+        </div>
+
+        <div class="card">
+            <div class="title">Novo Lançamento</div>
+            <input type="date" id="data">
+            
+            <select id="cliente" onchange="verificarNovoCliente(this)">
+                <option value="">SELECIONE O CLIENTE</option>
+                <option value="NOVO">+ CADASTRAR NOVO...</option>
+            </select>
+
+            <div id="container-produtos"></div>
+            <button class="btn-add" onclick="addProduto()">+ Adicionar Produto</button>
+            
+            <textarea id="obs" placeholder="OBSERVAÇÕES..." rows="2" 
+                      autocapitalize="characters" oninput="this.value = this.value.toUpperCase()"></textarea>
+            
+            <button class="btn-main" onclick="salvarPedido()">SALVAR PEDIDO</button>
+        </div>
+
+        <button class="btn-pdf" onclick="gerarPDF()">GERAR RELATÓRIO PDF</button>
+
+        <div id="filtros" style="display:flex; gap:5px; margin-bottom:15px;">
+            <button onclick="mudarModo('TUDO')" style="flex:1; padding:8px; font-size:10px;">TUDO</button>
+            <button onclick="mudarModo('PENDENTE')" style="flex:1; padding:8px; font-size:10px;">PENDENTES</button>
+        </div>
+
+        <div id="lista-pedidos"></div>
     </div>
 
-    <div id="lista"></div>
-
     <script>
-        // Configurações originais
-        const firebaseConfig = {
+        const config = {
             apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
             authDomain: "bragante-agro.firebaseapp.com",
             databaseURL: "https://bragante-agro-default-rtdb.firebaseio.com",
             projectId: "bragante-agro"
         };
-        firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(config);
         const db = firebase.database();
+        const som = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        
+        let modoAtual = 'TUDO';
+        let pedidosLocais = [];
+        let totalAntigo = -1;
 
-        function salvar() {
-            const c = document.getElementById('cliente').value.toUpperCase();
-            const d = document.getElementById('data').value;
-            const p = document.getElementById('produto').value.toUpperCase();
+        // FUNÇÃO DE OURO PARA MAIÚSCULAS
+        function up(t) { return t ? t.toString().toUpperCase().trim() : ""; }
 
-            if(!c || !d || !p) return alert("Preencha tudo!");
-
-            db.ref('pedidos').push({
-                cliente: c, data: d, produto: p,
-                timestamp: Date.now()
-            })
-            .then(() => {
-                alert("SALVOU!");
-                document.getElementById('cliente').value = "";
-                document.getElementById('produto').value = "";
-            })
-            .catch(e => alert("ERRO: " + e.message));
+        function addProduto(p="", q="", v="") {
+            const id = Date.now();
+            const div = document.createElement('div');
+            div.className = 'grid-prod';
+            div.id = id;
+            div.innerHTML = `
+                <input type="text" placeholder="PRODUTO" value="${p}" 
+                       autocapitalize="characters" oninput="this.value = this.value.toUpperCase()">
+                <input type="number" placeholder="Q" value="${q}">
+                <input type="number" placeholder="R$" value="${v}">
+                <button onclick="document.getElementById('${id}').remove()" style="color:red; background:none; border:none; font-weight:bold;">X</button>
+            `;
+            document.getElementById('container-produtos').appendChild(div);
         }
 
-        db.ref('pedidos').limitToLast(5).on('value', s => {
-            const list = document.getElementById('lista');
-            list.innerHTML = "<h3>ÚLTIMOS:</h3>";
-            const dados = s.val();
+        function verificarNovoCliente(s) {
+            if(s.value === "NOVO") {
+                let n = prompt("NOME DO CLIENTE:");
+                if(n) {
+                    n = up(n);
+                    let o = document.createElement("option"); o.value = n; o.text = n; o.selected = true; s.add(o);
+                } else s.value = "";
+            }
+        }
+
+        function salvarPedido() {
+            const cliente = up(document.getElementById('cliente').value);
+            const data = document.getElementById('data').value;
+            const obs = up(document.getElementById('obs').value);
+            
+            if(!cliente || !data) return alert("ERRO: CLIENTE E DATA SÃO OBRIGATÓRIOS!");
+
+            let itens = [];
+            let totalPedido = 0;
+            document.querySelectorAll('.grid-prod').forEach(linha => {
+                const campos = linha.querySelectorAll('input');
+                if(campos[0].value) {
+                    const q = parseFloat(campos[1].value) || 0;
+                    const v = parseFloat(campos[2].value) || 0;
+                    itens.push({ produto: up(campos[0].value), qtd: q, preco: v });
+                    totalPedido += (q * v);
+                }
+            });
+
+            db.ref('pedidos').push({
+                cliente, data, obs, itens, total: totalPedido,
+                entrega: 'PENDENTE', pagamento: 'PENDENTE',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                alert("PEDIDO SALVO!");
+                location.reload();
+            });
+        }
+
+        db.ref('pedidos').on('value', snap => {
+            const dados = snap.val();
+            pedidosLocais = [];
             if(dados) {
-                Object.keys(dados).reverse().forEach(id => {
-                    const ped = dados[id];
-                    list.innerHTML += `<div class="item"><strong>${ped.cliente}</strong><br>${ped.produto}</div>`;
-                });
+                pedidosLocais = Object.keys(dados).map(k => ({...dados[k], id: k})).reverse();
+                
+                // Alerta sonoro
+                if(totalAntigo !== -1 && pedidosLocais.length > totalAntigo) {
+                    som.play().catch(()=>{});
+                    document.getElementById('alerta-novo').style.display = 'block';
+                    setTimeout(() => document.getElementById('alerta-novo').style.display = 'none', 5000);
+                }
+                totalAntigo = pedidosLocais.length;
+                
+                atualizarListaClientes();
+                renderizarPedidos();
             }
         });
+
+        function renderizarPedidos() {
+            const div = document.getElementById('lista-pedidos');
+            div.innerHTML = "";
+            
+            const filtrados = pedidosLocais.filter(p => {
+                if(modoAtual === 'PENDENTE') return p.entrega === 'PENDENTE';
+                return true;
+            });
+
+            filtrados.forEach(p => {
+                const corStatus = p.entrega === 'ENTREGUE' ? '#2e7d32' : '#991b1b';
+                div.innerHTML += `
+                    <div class="pedido-item" style="border-left-color: ${corStatus}">
+                        <div style="font-size:11px; color:#64748b;">${p.data.split('-').reverse().join('/')}</div>
+                        <div style="font-weight:bold; font-size:17px; margin:5px 0;">${p.cliente}</div>
+                        <div style="font-size:13px;">${p.itens ? p.itens.map(i => `${i.qtd}x ${i.produto}`).join(', ') : ''}</div>
+                        <div style="margin-top:10px;">
+                            <span class="badge ${p.entrega==='ENTREGUE'?'pago':'pendente'}">${p.entrega}</span>
+                            <span class="badge ${p.pagamento==='PAGO'?'pago':'pendente'}">${p.pagamento}</span>
+                        </div>
+                        <div style="margin-top:10px; font-weight:bold;">TOTAL: R$ ${p.total ? p.total.toFixed(2) : '0.00'}</div>
+                        <div style="display:flex; gap:5px; margin-top:10px;">
+                            <button onclick="mudarStatus('${p.id}', 'entrega')" style="flex:1; font-size:9px; padding:5px;">ENTREGA</button>
+                            <button onclick="mudarStatus('${p.id}', 'pagamento')" style="flex:1; font-size:9px; padding:5px;">PAGO</button>
+                            <button onclick="apagar('${p.id}')" style="flex:1; font-size:9px; padding:5px; color:red;">APAGAR</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function mudarStatus(id, tipo) {
+            const p = pedidosLocais.find(x => x.id === id);
+            if(tipo === 'entrega') {
+                const novo = p.entrega === 'PENDENTE' ? 'ENTREGUE' : 'PENDENTE';
+                db.ref('pedidos/'+id).update({ entrega: novo });
+            } else {
+                const novo = p.pagamento === 'PENDENTE' ? 'PAGO' : 'PENDENTE';
+                db.ref('pedidos/'+id).update({ pagamento: novo });
+            }
+        }
+
+        function mudarModo(m) { modoAtual = m; renderizarPedidos(); }
+        function apagar(id) { if(confirm("EXCLUIR?")) db.ref('pedidos/'+id).remove(); }
+
+        function atualizarListaClientes() {
+            const sel = document.getElementById('cliente');
+            const nomes = [...new Set(pedidosLocais.map(p => p.cliente))].sort();
+            const atual = sel.value;
+            sel.innerHTML = '<option value="">SELECIONE O CLIENTE</option><option value="NOVO">+ CADASTRAR NOVO...</option>';
+            nomes.forEach(n => {
+                let o = document.createElement("option"); o.value = n; o.text = n;
+                if(n === atual) o.selected = true;
+                sel.add(o);
+            });
+        }
+
+        function gerarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("RELATORIO DE PEDIDOS - BRAGANTE AGRO", 14, 15);
+            const rows = [];
+            pedidosLocais.forEach(p => {
+                rows.push([p.data, p.cliente, p.total ? p.total.toFixed(2) : 0, p.entrega]);
+            });
+            doc.autoTable({ head: [['DATA', 'CLIENTE', 'TOTAL', 'STATUS']], body: rows, startY: 25 });
+            doc.save('vendas.pdf');
+        }
+
         document.getElementById('data').valueAsDate = new Date();
+        addProduto();
     </script>
 </body>
 </html>
