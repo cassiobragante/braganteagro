@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bragante Agro</title>
     
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <link rel="manifest" href="manifest.json">
+    
     <meta name="theme-color" content="#0a3d1d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -268,7 +274,6 @@
         function toggleAccordion() { const p = document.getElementById("filtroPanel"); p.style.display = p.style.display === "block" ? "none" : "block"; }
         function limparFiltros() { document.getElementById('filtro-cliente').value = ""; document.getElementById('filtro-produto').value = ""; document.getElementById('filtro-inicio').value = ""; document.getElementById('filtro-fim').value = ""; listarPedidos(); }
         
-        // NOVO RELATÓRIO INTELIGENTE
         function gerarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -281,7 +286,6 @@
             let qtdGeral = 0;
             const rows = [];
 
-            // Filtra os pedidos conforme a tela
             const filtrados = todosPedidos.filter(p => {
                 let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
                 let pC = fC === "" || p.cliente === fC;
@@ -290,10 +294,8 @@
                 return pM && pC && pP && pD;
             });
 
-            // Processa item por item dos pedidos filtrados
             filtrados.forEach(p => {
                 p.itens.forEach(i => {
-                    // Se houver filtro de produto, só adiciona se for o produto buscado
                     if (fP === "" || i.produto === fP) {
                         const sub = i.qtd * i.preco;
                         totalGeral += sub;
@@ -310,7 +312,6 @@
                 });
             });
 
-            // Cabeçalho do PDF
             doc.setFontSize(16);
             doc.text("Relatório de Pedidos - Bragante Agro", 14, 15);
             doc.setFontSize(10);
