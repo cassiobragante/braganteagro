@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Formulação - Bragante Agro</title>
+    <style>
+        :root {
+            --verde-escuro: #0a3d1d;
+            --verde-claro: #2e7d32;
+            --neutro-bg: #f1f5f9;
+            --neutro-borda: #cbd5e1;
+            --texto-principal: #1e293b;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--neutro-bg); margin: 0; padding: 15px; color: var(--texto-principal); display: flex; flex-direction: column; align-items: center; }
+        
+        .header { text-align: center; margin-bottom: 20px; padding-top: 10px; width: 100%; max-width: 450px; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 900; text-transform: uppercase; }
+        .header .bragante { color: var(--verde-escuro); }
+        .header .agro { color: var(--verde-claro); }
+        .header .estancia { margin: 4px 0 2px 0; font-size: 9px; color: #64748b; letter-spacing: 1px; font-weight: bold; text-transform: uppercase; }
+        .header .subtitulo { margin: 0; font-size: 11px; color: var(--verde-escuro); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .card { background: #ffffff; padding: 16px; border-radius: 10px; border: 1px solid var(--neutro-borda); margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: 100%; max-width: 450px; box-sizing: border-box; }
+        .section-title { font-size: 11px; font-weight: 700; color: var(--verde-escuro); text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        
+        label { display: block; font-size: 10px; font-weight: 600; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
+        input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--neutro-borda); font-size: 14px; outline: none; box-sizing: border-box; background: white; margin-bottom: 10px; }
+        
+        .grid-ing { display: grid; grid-template-columns: 2fr 1fr 40px; gap: 8px; margin-bottom: 8px; align-items: center; }
+        
+        .btn { cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 11px; text-transform: uppercase; border: none; transition: 0.2s; }
+        .btn-main { background: var(--verde-escuro); color: white; padding: 14px; width: 100%; }
+        .btn-add { background: transparent; color: var(--verde-claro); border: 1px dashed var(--verde-claro); padding: 9px; width: 100%; margin-bottom: 10px; }
+        .btn-del { color: #f87171; background: none; font-size: 18px; font-weight: bold; }
+
+        .btn-admin-action { background: #f1f5f9; color: #475569; padding: 4px 8px; font-size: 9px; border: 1px solid #cbd5e1; margin-left: 5px; }
+        .calc-input { font-size: 22px !important; text-align: center; border: 2px solid var(--verde-escuro) !important; color: var(--verde-escuro); font-weight: 900; height: 60px; }
+        
+        .resultado-card { background: #f8fafc; border-radius: 8px; padding: 15px; margin-top: 15px; border: 1px solid #e2e8f0; }
+        .item-pesagem { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
+        .item-pesagem:last-child { border-bottom: none; }
+        .item-nome { font-size: 13px; font-weight: 600; color: #475569; }
+        .item-valor { font-size: 18px; font-weight: 800; color: var(--verde-escuro); }
+        
+        .total-badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: #fee2e2; color: #991b1b; }
+        .total-ok { background: #dcfce7; color: #166534; }
+
+        .btn-acesso { background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; padding: 10px; width: 100%; margin-bottom: 12px; max-width: 450px; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            #painel-admin, #btn-liberar-admin, .btn, label, select, #meta-kg, .header .estancia, .header .subtitulo, .btn-admin-action { display: none !important; }
+            .card { border: none; box-shadow: none; max-width: 100%; }
+            .header { display: block !important; margin-bottom: 30px; }
+            .header h1 { font-size: 28px; }
+            .resultado-card { border: 2px solid #000; background: white; }
+            .item-pesagem { border-bottom: 1px solid #ccc; padding: 15px 0; }
+            .item-nome { font-size: 16px; color: black; }
+            .item-valor { font-size: 22px; color: black; }
+            .print-only { display: block !important; }
+        }
+        .print-only { display: none; text-align: center; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><span class="bragante">BRAGANTE</span> <span class="agro">AGRO</span></h1>
+        <p class="estancia">Estância São Francisco do Balsamo</p>
+        <p class="subtitulo">Formulação de Ração</p>
+    </div>
+
+    <button id="btn-liberar-admin" class="btn btn-acesso" onclick="liberarAdmin()">⚙️ ACESSAR CONFIGURAÇÃO</button>
+
+    <div class="card" id="painel-admin" style="display: none;">
+        <div class="section-title">
+            <span>⚙️ Configurar Receita</span>
+            <div>
+                <button class="btn btn-admin-action" onclick="carregarParaEditar()">Editar</button>
+                <button class="btn btn-admin-action" style="color:red" onclick="excluirReceita()">Excluir</button>
+                <span id="total-porcentagem" class="total-badge">0%</span>
+            </div>
+        </div>
+        
+        <input type="hidden" id="edit-id">
+        <label>Nome da Ração</label>
+        <input type="text" id="nome-racao" placeholder="Ex: Ração Top Mix">
+        
+        <div id="container-ingredientes"></div>
+        
+        <button class="btn btn-add" onclick="addLinhaIngrediente()">+ Adicionar Ingrediente</button>
+        <button class="btn btn-main" onclick="salvarReceita()">SALVAR FÓRMULA MESTRA</button>
+        <button class="btn" style="width: 100%; margin-top: 10px; background: #f1f5f9;" onclick="fecharAdmin()">FECHAR CONFIGURAÇÃO</button>
+    </div>
+
+    <div class="card" id="painel-producao">
+        <div class="section-title">⚖️ Produção e Pesagem</div>
+        
+        <label>1. Escolha a Ração</label>
+        <select id="select-racao" onchange="calcularMistura()">
+            <option value="">Selecione...</option>
+        </select>
+
+        <label>2. Quantos quilos fazer? (KG)</label>
+        <input type="number" id="meta-kg" class="calc-input" placeholder="0" oninput="calcularMistura()">
+
+        <div id="resultado-pesagem"></div>
+    </div>
+
+    <script>
+        const SENHA_MESTRA = "1030";
+        let receitasSalvas = JSON.parse(localStorage.getItem('receitas_agro_v2')) || [];
+
+        function liberarAdmin() {
+            const senha = prompt("Digite a senha de administrador:");
+            if (senha === SENHA_MESTRA) {
+                document.getElementById('painel-admin').style.display = 'block';
+                document.getElementById('btn-liberar-admin').style.display = 'none';
+                if(document.getElementById('container-ingredientes').innerHTML === "") {
+                    addLinhaIngrediente();
+                }
+            } else {
+                alert("Senha incorreta!");
+            }
+        }
+
+        function fecharAdmin() {
+            document.getElementById('painel-admin').style.display = 'none';
+            document.getElementById('btn-liberar-admin').style.display = 'block';
+            limparFormulario();
+        }
+
+        function addLinhaIngrediente(nome = '', perc = '') {
+            const container = document.getElementById('container-ingredientes');
+            const div = document.createElement('div');
+            div.className = 'grid-ing';
+            div.innerHTML = `
+                <input type="text" placeholder="Ingrediente" class="ing-nome" value="${nome}">
+                <input type="number" placeholder="%" class="ing-perc" value="${perc}" oninput="atualizarSoma()">
+                <button class="btn-del" onclick="this.parentElement.remove(); atualizarSoma()">×</button>
+            `;
+            container.appendChild(div);
+            atualizarSoma();
+        }
+
+        function atualizarSoma() {
+            let soma = 0;
+            document.querySelectorAll('.ing-perc').forEach(input => soma += Number(input.value || 0));
+            const badge = document.getElementById('total-porcentagem');
+            badge.innerText = soma + '%';
+            if(soma === 100) badge.className = 'total-badge total-ok';
+            else badge.className = 'total-badge';
+            return soma;
+        }
+
+        function salvarReceita() {
+            const nome = document.getElementById('nome-racao').value;
+            const editId = document.getElementById('edit-id').value;
+            const soma = atualizarSoma();
+
+            if(!nome) { alert("Dê um nome para a ração."); return; }
+            if(soma !== 100) { alert("A soma deve ser 100%. Atual: " + soma + "%"); return; }
+
+            const ingredientes = [];
+            document.querySelectorAll('.grid-ing').forEach(linha => {
+                const n = linha.querySelector('.ing-nome').value;
+                const p = linha.querySelector('.ing-perc').value;
+                if(n && p) ingredientes.push({ nome: n, porcentagem: Number(p) });
+            });
+
+            if(editId) {
+                const index = receitasSalvas.findIndex(r => r.id == editId);
+                receitasSalvas[index] = { id: Number(editId), nome, ingredientes };
+            } else {
+                receitasSalvas.push({ id: Date.now(), nome, ingredientes });
+            }
+
+            localStorage.setItem('receitas_agro_v2', JSON.stringify(receitasSalvas));
+            
+            alert("Receita Salva!");
+            limparFormulario();
+            atualizarSelects();
+            fecharAdmin();
+        }
+
+        function carregarParaEditar() {
+            const id = document.getElementById('select-racao').value;
+            if(!id) { alert("Selecione uma ração abaixo primeiro."); return; }
+            
+            const racao = receitasSalvas.find(r => r.id == id);
+            document.getElementById('edit-id').value = racao.id;
+            document.getElementById('nome-racao').value = racao.nome;
+            document.getElementById('container-ingredientes').innerHTML = "";
+            racao.ingredientes.forEach(ing => addLinhaIngrediente(ing.nome, ing.porcentagem));
+            window.scrollTo(0,0);
+        }
+
+        function excluirReceita() {
+            const id = document.getElementById('select-racao').value;
+            if(!id) { alert("Selecione uma ração abaixo."); return; }
+            
+            const racao = receitasSalvas.find(r => r.id == id);
+            if(confirm("Deseja EXCLUIR permanentemente a ração: " + racao.nome + "?")) {
+                receitasSalvas = receitasSalvas.filter(r => r.id != id);
+                localStorage.setItem('receitas_agro_v2', JSON.stringify(receitasSalvas));
+                alert("Excluída!");
+                atualizarSelects();
+                document.getElementById('resultado-pesagem').innerHTML = "";
+                limparFormulario();
+                fecharAdmin();
+            }
+        }
+
+        function limparFormulario() {
+            document.getElementById('edit-id').value = "";
+            document.getElementById('nome-racao').value = "";
+            document.getElementById('container-ingredientes').innerHTML = "";
+        }
+
+        function atualizarSelects() {
+            const select = document.getElementById('select-racao');
+            select.innerHTML = '<option value="">Selecione...</option>';
+            receitasSalvas.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id; opt.text = r.nome;
+                select.add(opt);
+            });
+        }
+
+        function calcularMistura() {
+            const meta = Number(document.getElementById('meta-kg').value);
+            const racaoId = document.getElementById('select-racao').value;
+            const container = document.getElementById('resultado-pesagem');
+            
+            if(!meta || !racaoId) { container.innerHTML = ""; return; }
+
+            const racao = receitasSalvas.find(r => r.id == racaoId);
+            let html = `<div class="print-only">ORDEM DE MISTURA</div>
+                        <div class="resultado-card">
+                            <div style="font-weight:bold; color:var(--verde-escuro); margin-bottom:15px; text-align:center; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+                                ${racao.nome.toUpperCase()} - TOTAL: ${meta}KG
+                            </div>`;
+            
+            racao.ingredientes.forEach(ing => {
+                const pesoFinal = (meta * (ing.porcentagem / 100)).toFixed(2);
+                html += `
+                    <div class="item-pesagem">
+                        <span class="item-nome">${ing.nome} (${ing.porcentagem}%)</span>
+                        <span class="item-valor">${pesoFinal} kg</span>
+                    </div>
+                `;
+            });
+            
+            html += `</div><button class="btn btn-main" style="margin-top:15px; background:#64748b;" onclick="window.print()">🖨️ IMPRIMIR ORDEM</button>`;
+            container.innerHTML = html;
+        }
+
+        atualizarSelects();
+    </script>
+</body>
+</html>
