@@ -1,16 +1,22 @@
 {
   "name": "Bragante Agro",
-  "short_name": "BraganteAgro",
+  "short_name": "Bragante",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#f1f5f9",
+  "background_color": "#ffffff",
   "theme_color": "#0a3d1d",
   "icons": [
     {
       "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "logo.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ]
 }
