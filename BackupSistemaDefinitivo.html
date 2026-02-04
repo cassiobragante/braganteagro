@@ -105,7 +105,7 @@
         }
     </style>
 </head>
-<body>
+<body onclick="solicitarPermissaoNotificacao()">
 
     <div class="app-container">
         <div class="header">
@@ -197,9 +197,23 @@
     <script>
         const appStartTime = Date.now();
 
+        // FUNÇÃO DE SOLICITAÇÃO DE PERMISSÃO
+        function solicitarPermissaoNotificacao() {
+            if (!("Notification" in window)) return;
+            if (Notification.permission === "default") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        console.log("Notificações permitidas!");
+                    }
+                });
+            }
+        }
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(reg => { 
                 console.log("Service Worker ativo");
+                // Solicita permissão assim que o SW estiver pronto
+                solicitarPermissaoNotificacao();
             });
         }
 
@@ -278,12 +292,12 @@
                 navigator.serviceWorker.ready.then(reg => {
                     reg.showNotification(titulo, { 
                         body: corpo, 
-                        icon: 'logo.png', // Ícone da notificação
-                        badge: 'logo.png', // Ícone da barra de status
+                        icon: 'logo.png',
+                        badge: 'logo.png',
                         vibrate: [200, 100, 200],
-                        tag: 'pedido-' + Date.now(), // Tag única força o balão a aparecer
-                        renotify: true, // Força vibração/som mesmo se houver outra
-                        requireInteraction: true // Mantém o balão até que o usuário toque
+                        tag: 'pedido-' + Date.now(),
+                        renotify: true,
+                        requireInteraction: true
                     });
                 });
             }
