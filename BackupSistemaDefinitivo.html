@@ -36,7 +36,16 @@
         .btn-mini { flex: 1; padding: 10px; font-size: 10px; background: #f8fafc; border: 1px solid var(--neutro-borda); }
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; }
         .modal-content { background:white; padding:20px; border-radius:12px; width:80%; max-width: 300px; text-align: center; }
-        @media print { body * { visibility: hidden; } #print-section, #print-section * { visibility: visible; } #print-section { position: absolute; left: 0; top: 0; width: 100%; } }
+        
+        #filtro-produto-relatorio { margin-bottom: 10px; }
+
+        /* Estilos de Impressão */
+        #print-section { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            #print-section, #print-section * { visibility: visible; }
+            #print-section { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+        }
     </style>
 </head>
 <body>
@@ -71,11 +80,19 @@
             <button id="nav-todos" class="btn-nav" onclick="mudarModo('todos')">TODOS</button>
         </div>
 
-        <button class="btn-report" onclick="gerarRelatorioImpressao()">IMPRIMIR RELATÓRIO</button>
+        <div class="card">
+            <label style="font-size: 10px; font-weight: bold;">FILTRAR PRODUTO NO RELATÓRIO:</label>
+            <select id="filtro-produto-relatorio">
+                <option value="">Todos os Produtos</option>
+            </select>
+            <button class="btn-report" onclick="gerarRelatorioImpressao()">IMPRIMIR RELATÓRIO</button>
+        </div>
+        
         <div id="listaPedidos"></div>
     </div>
 
     <div id="modalPagamento" class="modal"><div class="modal-content"><h3>Pagamento</h3><button onclick="selecionarForma('Pix')" class="btn-main" style="background:#14b8a6; margin-bottom:5px">PIX</button><button onclick="selecionarForma('Dinheiro')" class="btn-main" style="background:#22c55e; margin-bottom:5px">DINHEIRO</button><button onclick="selecionarOutros()" class="btn-main" style="background:#64748b">OUTROS</button><button onclick="fecharModal()" style="margin-top:10px; background:none; color:gray">FECHAR</button></div></div>
+    
     <div id="print-section"></div>
 
     <script>
@@ -125,13 +142,69 @@
         }
 
         function gerarRelatorioImpressao() {
-            const pedidos = todosPedidos.filter(p => modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true));
+            const printSection = document.getElementById('print-section');
+            const filtroProd = document.getElementById('filtro-produto-relatorio').value;
+            
+            const pedidos = todosPedidos.filter(p => 
+                modoAtual === 'entregas' ? p.entrega === 'Pendente' : 
+                (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true)
+            );
+
             if(pedidos.length === 0) return alert("Nada para imprimir");
-            let h = `<h2 style="text-align:center">Relatório Bragante Agro</h2><table border="1" style="width:100%; border-collapse:collapse"><tr><th>Data</th><th>Cliente</th><th>Total</th></tr>`;
-            let totalGeral = 0;
-            pedidos.forEach(p => { totalGeral += p.total; h += `<tr><td>${p.data}</td><td>${p.cliente}</td><td>R$ ${p.total.toFixed(2)}</td></tr>`; });
-            h += `<tr><td colspan="2">TOTAL GERAL</td><td>R$ ${totalGeral.toFixed(2)}</td></tr></table>`;
-            document.getElementById('print-section').innerHTML = h; window.print();
+
+            let totalGeralDinheiro = 0;
+            let totalGeralQtd = 0;
+
+            let h = `
+                <div style="padding:20px; font-family:'Inter', sans-serif;">
+                    <div style="text-align:center; border-bottom:2px solid #0a3d1d; padding-bottom:10px; margin-bottom:20px;">
+                        <h1 style="margin:0;"><span style="color:#0a3d1d;">BRAGANTE</span> <span style="color:#2e7d32;">AGRO</span></h1>
+                        <p style="text-transform:uppercase; font-size:12px; font-weight:bold; margin:5px 0;">Relatório de Pedidos - ${modoAtual.toUpperCase()}</p>
+                        ${filtroProd ? `<p style="font-size:11px; font-weight:bold;">Produto Filtrado: ${filtroProd}</p>` : ''}
+                    </div>`;
+
+            pedidos.forEach(p => {
+                // Filtra apenas os itens que correspondem ao filtro (ou todos se vazio)
+                const itensParaMostrar = p.itens.filter(i => filtroProd === "" || i.produto === filtroProd);
+                
+                if (itensParaMostrar.length > 0) {
+                    h += `
+                    <div style="margin-bottom:10px; padding:10px; border-bottom:1px solid #ddd;">
+                        <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                            <span>${p.cliente}</span>
+                            <span>${p.data.split('-').reverse().join('/')}</span>
+                        </div>
+                        <div style="font-size:13px; margin-top:5px;">`;
+                    
+                    itensParaMostrar.forEach(i => {
+                        const sub = i.qtd * i.preco;
+                        totalGeralDinheiro += sub;
+                        totalGeralQtd += i.qtd;
+                        h += `<div>• ${i.qtd}x ${i.produto} - R$ ${sub.toFixed(2)}</div>`;
+                    });
+
+                    h += `</div></div>`;
+                }
+            });
+
+            h += `
+                <div style="margin-top:20px; padding:15px; background:#f1f5f9; border:1px solid #0a3d1d; border-radius:8px;">
+                    <div style="display:flex; justify-content:space-between; font-weight:900;">
+                        <span>TOTAL DE PRODUTOS:</span>
+                        <span>${totalGeralQtd} unidades</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-weight:900; color:#0a3d1d; font-size:18px; margin-top:5px;">
+                        <span>TOTAL GERAL:</span>
+                        <span>R$ ${totalGeralDinheiro.toFixed(2)}</span>
+                    </div>
+                </div>
+            </div>`;
+
+            printSection.innerHTML = h;
+            window.print();
+            
+            // Limpa após a impressão para não travar a tela
+            setTimeout(() => { printSection.innerHTML = ""; }, 500);
         }
 
         function prepararEdicao(id) { const p = todosPedidos.find(x => x.id === id); document.getElementById('edit-id').value = p.id; document.getElementById('cliente').value = p.cliente; document.getElementById('data').value = p.data; document.getElementById('container-produtos').innerHTML = ""; p.itens.forEach(i => adicionarLinhaProduto(i.produto, i.qtd, i.preco)); document.getElementById('btn-cancelar').style.display='block'; window.scrollTo(0,0); }
@@ -142,7 +215,22 @@
         function selecionarForma(f) { db.ref('pedidos/'+pedidoEmPagamento).update({pagamento:'Pago', formaPg:f}); fecharModal(); }
         function selecionarOutros() { const f = prompt("Forma de Pgto:"); if(f) selecionarForma(f); }
         function fecharModal() { document.getElementById('modalPagamento').style.display='none'; }
-        function atualizarListasMenu() { const sc = document.getElementById('cliente'), cSet = new Set(); todosPedidos.forEach(p => cSet.add(p.cliente)); const val = sc.value; sc.innerHTML = '<option value="">Selecione...</option><option value="NOVO_CLIENTE">+ NOVO CLIENTE...</option>'; [...cSet].sort().forEach(c => sc.add(new Option(c, c))); sc.value = val; }
+        
+        function atualizarListasMenu() { 
+            const sc = document.getElementById('cliente'), fr = document.getElementById('filtro-produto-relatorio'), cSet = new Set(), pSet = new Set(); 
+            todosPedidos.forEach(p => {
+                cSet.add(p.cliente);
+                p.itens.forEach(i => pSet.add(i.produto));
+            }); 
+            const valC = sc.value; 
+            sc.innerHTML = '<option value="">Selecione...</option><option value="NOVO_CLIENTE">+ NOVO CLIENTE...</option>'; 
+            [...cSet].sort().forEach(c => sc.add(new Option(c, c))); sc.value = valC; 
+            
+            const valP = fr.value;
+            fr.innerHTML = '<option value="">Todos os Produtos</option>';
+            [...pSet].sort().forEach(p => fr.add(new Option(p, p))); fr.value = valP;
+        }
+
         function verificarNovoCliente(s) { if(s.value === "NOVO_CLIENTE") { const n = prompt("Nome:"); if(n) { const o = new Option(n, n); s.add(o); s.value = n; } } }
         document.getElementById('data').valueAsDate = new Date(); adicionarLinhaProduto();
     </script>
