@@ -195,12 +195,11 @@
     <div id="print-section"></div>
 
     <script>
-        // Captura o horário de abertura do sistema para ignorar pedidos antigos
         const appStartTime = Date.now();
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(reg => { 
-                Notification.requestPermission(); 
+                console.log("Service Worker ativo");
             });
         }
 
@@ -275,15 +274,16 @@
         }
 
         function enviarNotificacao(titulo, corpo) {
-            if (Notification.permission === 'granted' && navigator.serviceWorker.controller) {
+            if (Notification.permission === 'granted') {
                 navigator.serviceWorker.ready.then(reg => {
                     reg.showNotification(titulo, { 
                         body: corpo, 
-                        icon: 'logo.png',
-                        badge: 'logo.png',
+                        icon: 'logo.png', // Ícone da notificação
+                        badge: 'logo.png', // Ícone da barra de status
                         vibrate: [200, 100, 200],
-                        tag: 'pedido-update',
-                        renotify: true
+                        tag: 'pedido-' + Date.now(), // Tag única força o balão a aparecer
+                        renotify: true, // Força vibração/som mesmo se houver outra
+                        requireInteraction: true // Mantém o balão até que o usuário toque
                     });
                 });
             }
@@ -339,10 +339,9 @@
             }
         }
 
-        // Listener corrigido: Só apita se o timestamp do pedido for posterior à abertura da página
         db.ref('pedidos').on('child_added', (snapshot) => {
             const p = snapshot.val();
-            if (p && p.timestamp > appStartTime && !p.editado) {
+            if (p && p.timestamp && p.timestamp > appStartTime && !p.editado) {
                 tocarBeep();
                 enviarNotificacao("Novo Pedido", `${p.cliente}: R$ ${p.total.toFixed(2)}`);
             }
