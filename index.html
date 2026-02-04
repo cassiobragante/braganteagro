@@ -42,17 +42,21 @@
             display: none;
             position: fixed;
             top: 20px;
-            left: 10px;
+            left: 15px;
             z-index: 100000;
-            background: #ffffff;
-            color: #0a3d1d;
-            padding: 10px 14px;
-            border-radius: 50%;
-            border: 2px solid #2e7d32;
+            background: #0a3d1d; /* Verde escuro combinando com o sistema */
+            color: #ffffff;
+            width: 45px;
+            height: 45px;
+            border-radius: 8px; /* Quadrado com cantos levemente arredondados */
+            border: none;
             font-weight: bold;
-            font-size: 18px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            font-size: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #tela-racao {
@@ -84,7 +88,7 @@
     <script>
         function abrirRacao() {
             document.getElementById('tela-racao').style.display = 'block';
-            document.getElementById('btn-voltar-pedidos').style.display = 'block';
+            document.getElementById('btn-voltar-pedidos').style.display = 'flex';
             document.getElementById('btn-ir-racao').style.display = 'none';
         }
 

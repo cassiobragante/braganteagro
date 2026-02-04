@@ -195,8 +195,13 @@
     <div id="print-section"></div>
 
     <script>
+        // Captura o horário de abertura do sistema para ignorar pedidos antigos
+        const appStartTime = Date.now();
+
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(reg => { Notification.requestPermission(); });
+            navigator.serviceWorker.register('sw.js').then(reg => { 
+                Notification.requestPermission(); 
+            });
         }
 
         const firebaseConfig = {
@@ -213,7 +218,6 @@
 
         let listaProdutosBase = [];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
-        let primeiraCarga = true; 
 
         db.ref('configuracoes/produtos').on('value', (snap) => {
             listaProdutosBase = [];
@@ -273,7 +277,14 @@
         function enviarNotificacao(titulo, corpo) {
             if (Notification.permission === 'granted' && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.ready.then(reg => {
-                    reg.showNotification(titulo, { body: corpo, icon: 'logo.png' });
+                    reg.showNotification(titulo, { 
+                        body: corpo, 
+                        icon: 'logo.png',
+                        badge: 'logo.png',
+                        vibrate: [200, 100, 200],
+                        tag: 'pedido-update',
+                        renotify: true
+                    });
                 });
             }
         }
@@ -323,21 +334,17 @@
             } else {
                 const nid = db.ref('pedidos').push().key;
                 db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false}).then(() => { 
-                    // Notificação enviada pelo trigger do child_added
                     cancelarEdicao(); 
                 });
             }
         }
 
-        // Listener para NOVOS pedidos em tempo real (apenas o que entrar agora)
-        const queryNovos = db.ref('pedidos').limitToLast(1);
-        queryNovos.on('child_added', (snapshot) => {
-            if (primeiraCarga) { primeiraCarga = false; return; }
-            const novoPedido = snapshot.val();
-            // Só notifica se não for uma edição (edição já notificada no salvarPedido)
-            if (novoPedido && !novoPedido.editado) {
+        // Listener corrigido: Só apita se o timestamp do pedido for posterior à abertura da página
+        db.ref('pedidos').on('child_added', (snapshot) => {
+            const p = snapshot.val();
+            if (p && p.timestamp > appStartTime && !p.editado) {
                 tocarBeep();
-                enviarNotificacao("Novo Pedido", `${novoPedido.cliente}: R$ ${novoPedido.total.toFixed(2)}`);
+                enviarNotificacao("Novo Pedido", `${p.cliente}: R$ ${p.total.toFixed(2)}`);
             }
         });
 
