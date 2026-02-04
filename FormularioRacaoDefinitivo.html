@@ -101,7 +101,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // CONFIGURAÇÃO DO NOVO PROJETO BRAGANTE RACAO
         const firebaseConfig = {
             apiKey: "AIzaSyCyPiiAtA2vVZpCj0IYR1tf2JlOsmqlg3I",
             authDomain: "braganteracao.firebaseapp.com",
@@ -119,7 +118,6 @@
         let receitasSalvas = [];
         const SENHA_MESTRA = "1030";
 
-        // Sincronização em tempo real
         onValue(formulasRef, (snapshot) => {
             const data = snapshot.val();
             receitasSalvas = data ? Object.keys(data).map(key => ({ ...data[key], fbKey: key })) : [];
@@ -173,6 +171,23 @@
             window.fecharAdmin();
         };
 
+        // CORREÇÃO: Função para carregar os dados da receita selecionada para edição
+        window.carregarParaEditar = () => {
+            const key = document.getElementById('select-racao').value;
+            if (!key) return alert("Selecione uma ração para editar!");
+            
+            const r = receitasSalvas.find(x => x.fbKey === key);
+            if (r) {
+                document.getElementById('edit-id').value = r.fbKey;
+                document.getElementById('nome-racao').value = r.nome;
+                const container = document.getElementById('container-ingredientes');
+                container.innerHTML = "";
+                r.ingredientes.forEach(ing => {
+                    window.addLinhaIngrediente(ing.nome, ing.porcentagem);
+                });
+            }
+        };
+
         window.excluirReceita = () => {
             const key = document.getElementById('select-racao').value;
             if(key && confirm("Excluir de todos os aparelhos?")) remove(ref(db, 'formulas/' + key));
@@ -180,19 +195,31 @@
 
         window.atualizarSelects = () => {
             const s = document.getElementById('select-racao');
+            const valorAtual = s.value;
             s.innerHTML = '<option value="">Selecione...</option>';
-            receitasSalvas.forEach(r => s.add(new Option(r.nome, r.fbKey)));
+            receitasSalvas.forEach(r => {
+                const o = new Option(r.nome, r.fbKey);
+                if(r.fbKey === valorAtual) o.selected = true;
+                s.add(o);
+            });
         };
 
+        // CORREÇÃO: Agora exibe a percentagem (%) ao lado do nome do ingrediente
         window.calcularMistura = () => {
             const meta = Number(document.getElementById('meta-kg').value);
             const key = document.getElementById('select-racao').value;
             const res = document.getElementById('resultado-pesagem');
             if(!meta || !key) return res.innerHTML = "";
             const r = receitasSalvas.find(x => x.fbKey === key);
-            let h = `<div class="resultado-card"><div style="text-align:center;font-weight:bold">${r.nome} - ${meta}kg</div>`;
-            r.ingredientes.forEach(i => h += `<div class="item-pesagem"><span>${i.nome}</span><b>${(meta*(i.porcentagem/100)).toFixed(2)}kg</b></div>`);
-            res.innerHTML = h + `</div><button class="btn btn-main" onclick="window.print()">🖨️ IMPRIMIR</button>`;
+            let h = `<div class="resultado-card"><div style="text-align:center;font-weight:bold;margin-bottom:10px;color:var(--verde-escuro)">${r.nome.toUpperCase()} - ${meta}kg</div>`;
+            r.ingredientes.forEach(i => {
+                const pesoCalculado = (meta*(i.porcentagem/100)).toFixed(2);
+                h += `<div class="item-pesagem">
+                        <span class="item-nome">${i.nome} (${i.porcentagem}%)</span>
+                        <b class="item-valor">${pesoCalculado}kg</b>
+                      </div>`;
+            });
+            res.innerHTML = h + `</div><button class="btn btn-main" style="margin-top:10px; background:#64748b;" onclick="window.print()">🖨️ IMPRIMIR</button>`;
         };
     </script>
 </body>
