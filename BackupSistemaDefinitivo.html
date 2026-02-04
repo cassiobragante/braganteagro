@@ -97,19 +97,11 @@
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding: 20px; }
         .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center; }
 
-        /* Estilos Corrigidos de Impressão */
         #print-section { display: none; }
         @media print {
             body * { visibility: hidden; }
             #print-section, #print-section * { visibility: visible; }
-            #print-section { 
-                position: absolute; 
-                left: 0; 
-                top: 0; 
-                width: 100%; 
-                display: block !important;
-                background-color: white;
-            }
+            #print-section { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background-color: white; }
         }
     </style>
 </head>
@@ -203,13 +195,8 @@
     <div id="print-section"></div>
 
     <script>
-        // Registro do Service Worker para Notificações
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => {
-                    console.log('SW registrado');
-                    Notification.requestPermission();
-                });
+            navigator.serviceWorker.register('sw.js').then(reg => { Notification.requestPermission(); });
         }
 
         const firebaseConfig = {
@@ -235,8 +222,7 @@
             atualizarListasMenu();
             document.querySelectorAll('[id^="prod-"]').forEach(sel => {
                 const val = sel.value;
-                sel.innerHTML = '<option value="">Produto...</option>' + 
-                    listaProdutosBase.map(p => `<option value="${p}" ${p===val?'selected':''}>${p}</option>`).join('');
+                sel.innerHTML = '<option value="">Produto...</option>' + listaProdutosBase.map(p => `<option value="${p}" ${p===val?'selected':''}>${p}</option>`).join('');
             });
         });
 
@@ -249,8 +235,7 @@
 
         function abrirModalExcluirProd() {
             const sel = document.getElementById('select-excluir-prod');
-            sel.innerHTML = '<option value="">Selecione um produto...</option>' + 
-                listaProdutosBase.map(p => `<option value="${p}">${p}</option>`).join('');
+            sel.innerHTML = '<option value="">Selecione um produto...</option>' + listaProdutosBase.map(p => `<option value="${p}">${p}</option>`).join('');
             document.getElementById('modalExcluirProd').style.display = 'flex';
         }
 
@@ -274,19 +259,13 @@
                 gain.connect(context.destination);
                 gain.gain.setValueAtTime(0, context.currentTime);
                 gain.gain.linearRampToValueAtTime(0.4, context.currentTime + 0.01);
-                
                 const playNote = (freq, start, duration, type = 'sine') => {
                     const osc = context.createOscillator();
-                    osc.type = type; 
-                    osc.frequency.setValueAtTime(freq, start);
-                    osc.connect(gain);
-                    osc.start(start);
-                    osc.stop(start + duration);
+                    osc.type = type; osc.frequency.setValueAtTime(freq, start);
+                    osc.connect(gain); osc.start(start); osc.stop(start + duration);
                 };
-
                 playNote(440, context.currentTime, 0.1); 
                 playNote(880, context.currentTime + 0.08, 0.2); 
-
                 gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.4);
             } catch (e) { }
         }
@@ -309,10 +288,7 @@
             let oQ = ""; for(let i=1; i<=100; i++) oQ += `<option value="${i}" ${i == q ? 'selected' : ''}>${i}</option>`;
             let oP = `<option value="">Produto...</option>`;
             listaProdutosBase.forEach(item => { oP += `<option value="${item}" ${item === p ? 'selected' : ''}>${item}</option>`; });
-            div.innerHTML = `<select id="prod-${contadorProdutos}">${oP}</select>
-                <select id="qtd-${contadorProdutos}">${oQ}</select>
-                <input type="number" id="preco-${contadorProdutos}" value="${v}" step="0.01" placeholder="R$">
-                <button class="btn-remove-item" onclick="removerLinha(${contadorProdutos})">×</button>`;
+            div.innerHTML = `<select id="prod-${contadorProdutos}">${oP}</select><select id="qtd-${contadorProdutos}">${oQ}</select><input type="number" id="preco-${contadorProdutos}" value="${v}" step="0.01" placeholder="R$"><button class="btn-remove-item" onclick="removerLinha(${contadorProdutos})">×</button>`;
             document.getElementById('container-produtos').appendChild(div);
         }
         
@@ -337,16 +313,31 @@
             });
             if(itens.length === 0) return alert("Adicione um item");
             const dados = { data, cliente, itens, total, descricao: obs || "", timestamp: firebase.database.ServerValue.TIMESTAMP };
-            if(idEdit) db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => { cancelarEdicao(); });
-            else { const nid = db.ref('pedidos').push().key; db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false}).then(() => { cancelarEdicao(); }); }
+            
+            if(idEdit) {
+                db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => { 
+                    enviarNotificacao("Pedido Editado", `${cliente}: R$ ${total.toFixed(2)}`);
+                    tocarBeep();
+                    cancelarEdicao(); 
+                });
+            } else {
+                const nid = db.ref('pedidos').push().key;
+                db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false}).then(() => { 
+                    // Notificação enviada pelo trigger do child_added
+                    cancelarEdicao(); 
+                });
+            }
         }
 
-        db.ref('pedidos').limitToLast(1).on('child_added', (snapshot) => {
+        // Listener para NOVOS pedidos em tempo real (apenas o que entrar agora)
+        const queryNovos = db.ref('pedidos').limitToLast(1);
+        queryNovos.on('child_added', (snapshot) => {
             if (primeiraCarga) { primeiraCarga = false; return; }
             const novoPedido = snapshot.val();
-            if (novoPedido) {
+            // Só notifica se não for uma edição (edição já notificada no salvarPedido)
+            if (novoPedido && !novoPedido.editado) {
                 tocarBeep();
-                enviarNotificacao(novoPedido.editado ? "Pedido Editado" : "Novo Pedido", `${novoPedido.cliente}: R$ ${novoPedido.total.toFixed(2)}`);
+                enviarNotificacao("Novo Pedido", `${novoPedido.cliente}: R$ ${novoPedido.total.toFixed(2)}`);
             }
         });
 
@@ -378,8 +369,7 @@
                 return pM && pC && pP && pD;
             });
             filtrados.forEach(p => {
-                let entOk = p.entrega === 'Entregue';
-                let pagOk = p.pagamento === 'Pago';
+                let entOk = p.entrega === 'Entregue'; let pagOk = p.pagamento === 'Pago';
                 let isNovo = (agora - p.timestamp < 86400000) && p.entrega === 'Pendente' && p.pagamento === 'Pendente';
                 let cor = entOk ? (pagOk ? "var(--verde-claro)" : "var(--vermelho-alerta)") : "var(--cinza-pendente)";
                 lista.innerHTML += `<div class="pedido-item" style="border-left-color: ${cor}">
@@ -409,7 +399,6 @@
             const fP = document.getElementById('filtro-produto').value;
             const fI = document.getElementById('filtro-inicio').value;
             const fF = document.getElementById('filtro-fim').value;
-
             const filtrados = todosPedidos.filter(p => {
                 let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
                 let pC = fC === "" || p.cliente === fC;
@@ -417,50 +406,21 @@
                 let pD = (!fI || p.data >= fI) && (!fF || p.data <= fF);
                 return pM && pC && pP && pD;
             });
-
             if(filtrados.length === 0) return alert("Nenhum pedido nos filtros atuais.");
-
             let totalValor = 0, totalQtd = 0, htmlContent = "";
-            
             filtrados.forEach(p => {
                 const itensFiltrados = (p.itens || []).filter(i => fP === "" || i.produto === fP);
                 if (itensFiltrados.length > 0) {
-                    htmlContent += `<div style="padding: 10px 0; border-bottom: 1px solid #ddd; margin-bottom: 10px;">
-                        <div style="font-weight: 700; font-size: 14px;">${p.cliente} - ${p.data.split('-').reverse().join('/')}</div>`;
-                    
+                    htmlContent += `<div style="padding: 10px 0; border-bottom: 1px solid #ddd; margin-bottom: 10px;"><div style="font-weight: 700; font-size: 14px;">${p.cliente} - ${p.data.split('-').reverse().join('/')}</div>`;
                     itensFiltrados.forEach(i => {
-                        const sub = i.qtd * i.preco;
-                        totalValor += sub; 
-                        totalQtd += i.qtd;
-                        htmlContent += `<div style="font-size: 12px; color: #555; margin-left: 10px;">
-                            • ${i.qtd}x ${i.produto} - Unit: R$ ${i.preco.toFixed(2)} | Sub: R$ ${sub.toFixed(2)}
-                        </div>`;
+                        const sub = i.qtd * i.preco; totalValor += sub; totalQtd += i.qtd;
+                        htmlContent += `<div style="font-size: 12px; color: #555; margin-left: 10px;">• ${i.qtd}x ${i.produto} - Unit: R$ ${i.preco.toFixed(2)} | Sub: R$ ${sub.toFixed(2)}</div>`;
                     });
                     htmlContent += `</div>`;
                 }
             });
-
             const printDiv = document.getElementById('print-section');
-            printDiv.innerHTML = `
-                <div style="padding:30px; font-family:'Inter', sans-serif;">
-                    <div style="text-align:center; margin-bottom: 20px;">
-                        <h2 style="margin:0; color:#0a3d1d;">BRAGANTE AGRO</h2>
-                        <p style="margin:5px 0; font-size:12px; font-weight:bold; color:#666; text-transform:uppercase;">Relatório de Pedidos - ${modoAtual}</p>
-                        <p style="margin:0; font-size:10px; color:#999;">Gerado em: ${new Date().toLocaleString()}</p>
-                    </div>
-                    ${htmlContent}
-                    <div style="margin-top:20px; background:#f1f5f9; padding:15px; border-radius:8px; border:1px solid #0a3d1d;">
-                        <div style="display:flex; justify-content:space-between; font-weight:bold; font-size: 13px;">
-                            <span>TOTAL DE ITENS:</span>
-                            <span>${totalQtd}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-weight:900; font-size: 16px; color:#0a3d1d; margin-top:5px;">
-                            <span>VALOR TOTAL GERAL:</span>
-                            <span>R$ ${totalValor.toFixed(2)}</span>
-                        </div>
-                    </div>
-                </div>`;
-            
+            printDiv.innerHTML = `<div style="padding:30px; font-family:'Inter', sans-serif;"><div style="text-align:center; margin-bottom: 20px;"><h2 style="margin:0; color:#0a3d1d;">BRAGANTE AGRO</h2><p style="margin:5px 0; font-size:12px; font-weight:bold; color:#666; text-transform:uppercase;">Relatório de Pedidos - ${modoAtual}</p><p style="margin:0; font-size:10px; color:#999;">Gerado em: ${new Date().toLocaleString()}</p></div>${htmlContent}<div style="margin-top:20px; background:#f1f5f9; padding:15px; border-radius:8px; border:1px solid #0a3d1d;"><div style="display:flex; justify-content:space-between; font-weight:bold; font-size: 13px;"><span>TOTAL DE ITENS:</span><span>${totalQtd}</span></div><div style="display:flex; justify-content:space-between; font-weight:900; font-size: 16px; color:#0a3d1d; margin-top:5px;"><span>VALOR TOTAL GERAL:</span><span>R$ ${totalValor.toFixed(2)}</span></div></div></div>`;
             window.print();
             setTimeout(() => { printDiv.innerHTML = ""; }, 1000);
         }
@@ -468,28 +428,19 @@
         function confirmarEntrega(id) {
             const p = todosPedidos.find(x=>x.id===id);
             if(p.entrega === 'Entregue') {
-                if(confirm("Deseja estornar a entrega para PENDENTE?")) {
-                    db.ref('pedidos/'+id).update({entrega:'Pendente'});
-                }
+                if(confirm("Deseja estornar a entrega para PENDENTE?")) db.ref('pedidos/'+id).update({entrega:'Pendente'});
             } else {
                 if(confirm("O pedido foi entregue?")) {
                     db.ref('pedidos/'+id).update({entrega:'Entregue'});
-                    if(p.pagamento === 'Pendente' && confirm("O pedido já foi pago?")) {
-                        abrirModal(id);
-                    }
+                    if(p.pagamento === 'Pendente' && confirm("O pedido já foi pago?")) abrirModal(id);
                 }
             }
         }
 
         function gerenciarPgto(id) { 
             const p = todosPedidos.find(x=>x.id===id); 
-            if(p.pagamento==='Pago') { 
-                if(confirm("Deseja estornar o pagamento para PENDENTE?")) {
-                    db.ref('pedidos/'+id).update({pagamento:'Pendente', formaPg:''}); 
-                }
-            } else {
-                abrirModal(id); 
-            }
+            if(p.pagamento==='Pago') { if(confirm("Deseja estornar o pagamento para PENDENTE?")) db.ref('pedidos/'+id).update({pagamento:'Pendente', formaPg:''}); } 
+            else { abrirModal(id); }
         }
 
         function mudarModo(m) { modoAtual = m; document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active')); document.getElementById('nav-' + m).classList.add('active'); listarPedidos(); }
