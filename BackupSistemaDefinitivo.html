@@ -166,13 +166,12 @@
             <button id="nav-todos" class="btn-nav" onclick="mudarModo('todos')">TODOS PEDIDOS</button>
         </div>
         
-        <button class="btn-report" id="btn-imprimir">IMPRIMIR RELATÓRIO</button>
+        <button class="btn-report" onclick="gerarRelatorioImpressao()">IMPRIMIR RELATÓRIO</button>
 
         <div class="section-title" id="titulo-lista" style="margin-left:5px">Entregas Pendentes</div>
         <div id="listaPedidos"></div>
     </div>
 
-    <!-- Modais Originais -->
     <div id="modalPagamento" class="modal">
         <div class="modal-content">
             <div class="section-title">Recebimento</div>
@@ -400,7 +399,6 @@
             });
         }
 
-        // --- FUNÇÃO DE IMPRESSÃO CORRIGIDA PARA LISTAR ITENS ---
         function gerarRelatorioImpressao() {
             const fC = document.getElementById('filtro-cliente').value;
             const fP = document.getElementById('filtro-produto').value;
@@ -422,20 +420,14 @@
             let htmlPedidos = "";
 
             filtrados.forEach(p => {
-                // Filtramos os itens do pedido se houver filtro de produto ativo
                 const itensParaListar = (p.itens || []).filter(i => fP === "" || i.produto === fP);
-                
                 if (itensParaListar.length > 0) {
                     htmlPedidos += `<div style="padding: 10px 0; border-bottom: 1px solid #eee;">
                         <div style="font-weight: bold; font-size: 14px;">${p.cliente} - ${p.data.split('-').reverse().join('/')}</div>`;
-                    
                     itensParaListar.forEach(i => {
                         const subtotal = i.qtd * i.preco;
                         totalValor += subtotal;
-                        
-                        // Soma para o resumo final
                         resumoProdutos[i.produto] = (resumoProdutos[i.produto] || 0) + i.qtd;
-                        
                         htmlPedidos += `<div style="font-size: 12px; margin-left: 10px; color: #444;">
                             • ${i.qtd}x ${i.produto} (R$ ${i.preco.toFixed(2)}) = R$ ${subtotal.toFixed(2)}
                         </div>`;
@@ -444,7 +436,6 @@
                 }
             });
 
-            // Gerar o Resumo de quantidades lá no final
             let htmlResumo = `<div style="margin-top: 20px; border: 1px solid #ccc; padding: 10px; background: #fafafa;">
                 <div style="font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #ccc; margin-bottom: 5px;">Resumo Total de Itens:</div>`;
             for (let prod in resumoProdutos) {
@@ -466,13 +457,9 @@
                     </div>
                 </div>`;
             
-            setTimeout(() => { window.print(); }, 400);
+            window.print();
         }
 
-        // Ouvinte do Botão
-        document.getElementById('btn-imprimir').addEventListener('click', gerarRelatorioImpressao);
-
-        // --- Restante das Funções Originais ---
         function confirmarEntrega(id) {
             const p = todosPedidos.find(x=>x.id===id);
             if(p.entrega === 'Entregue') {
