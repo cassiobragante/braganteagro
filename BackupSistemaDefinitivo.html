@@ -7,16 +7,15 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     
+    <!-- Meta tags para evitar cache -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     
     <link rel="manifest" href="manifest.json">
-    
     <meta name="theme-color" content="#0a3d1d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="icon" type="image/png" href="logo.png">
 
@@ -65,7 +64,6 @@
         .col-cliente { flex: 1; }
         label { display: block; font-size: 10px; font-weight: 600; color: #64748b; margin-bottom: 5px; }
         input, select, textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--neutro-borda); font-size: 14px; outline: none; box-sizing: border-box; background: white; }
-        #descricao { text-transform: capitalize; }
         .grid-prod { display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 8px; margin-bottom: 8px; align-items: center; }
         button { cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 11px; text-transform: uppercase; border: none; }
         .btn-main { background: var(--verde-escuro); color: white; padding: 14px; width: 100%; margin-top: 10px; font-size: 13px; }
@@ -77,31 +75,31 @@
         .accordion { background: #f1f5f9; color: var(--texto-principal); padding: 10px; width: 100%; text-align: left; border: 1px solid var(--neutro-borda); border-radius: 6px; margin-bottom: 5px; display: flex; justify-content: space-between; }
         .panel { display: none; background: white; padding: 15px; border: 1px solid var(--neutro-borda); border-top: none; border-radius: 0 0 6px 6px; margin-bottom: 15px; }
         .pedido-item { background: white; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--neutro-borda); position: relative; border-left-width: 6px; border-left-style: solid; }
-        .status-container { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
         .tag { font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #e2e8f0; color: #64748b; }
         .tag-verde { background: #dcfce7; color: #166534; }
         .tag-editado { background: #fee2e2; color: #991b1b; }
-        .btn-del { position: absolute; top: 10px; right: 10px; color: #cbd5e1; font-size: 16px; background: none; width: auto; }
-        .btn-remove-item { color: var(--vermelho-alerta); background: none; font-size: 18px; padding: 0; font-weight: bold; }
         .total-row { display: flex; justify-content: space-between; border-top: 1px solid #f1f5f9; margin-top: 12px; padding-top: 10px; }
         .total-val { font-weight: 700; color: var(--verde-escuro); font-size: 15px; }
         .actions { display: flex; gap: 6px; margin-top: 12px; }
         .btn-mini { flex: 1; padding: 10px; font-size: 10px; background: #f8fafc; border: 1px solid var(--neutro-borda); color: #475569; }
-        
-        .btn-active-delivery { background: var(--verde-claro) !important; color: white !important; border-color: var(--verde-claro) !important; }
-        .btn-active-pay { background: #1e40af !important; color: white !important; border-color: #1e40af !important; }
-        
-        .badge-novo { background: #f59e0b; color: white; font-size: 8px; padding: 2px 6px; border-radius: 10px; position: absolute; top: 10px; right: 40px; animation: pulse 2s infinite; font-weight: 900; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .btn-active-delivery { background: var(--verde-claro) !important; color: white !important; }
+        .btn-active-pay { background: #1e40af !important; color: white !important; }
 
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding: 20px; }
-        .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center; }
-
+        /* Estilo da Impressão Corrigido */
         #print-section { display: none; }
         @media print {
-            body * { visibility: hidden; }
-            #print-section, #print-section * { visibility: visible; }
-            #print-section { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background-color: white; }
+            body { background: white !important; }
+            .app-container { display: none !important; }
+            #print-section { 
+                display: block !important; 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                background: white !important;
+                visibility: visible !important;
+            }
+            #print-section * { visibility: visible !important; color: black !important; }
         }
     </style>
 </head>
@@ -168,12 +166,12 @@
         
         <button class="btn-report" onclick="gerarRelatorioImpressao()">IMPRIMIR RELATÓRIO</button>
 
-        <div class="section-title" id="titulo-lista" style="margin-left:5px">Entregas Pendentes</div>
         <div id="listaPedidos"></div>
     </div>
 
-    <div id="modalPagamento" class="modal">
-        <div class="modal-content">
+    <!-- Modais e Afins -->
+    <div id="modalPagamento" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding: 20px;">
+        <div class="modal-content" style="background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center;">
             <div class="section-title">Recebimento</div>
             <button onclick="selecionarForma('Pix')" class="btn-main" style="background:#14b8a6; margin-bottom: 8px;">PIX</button>
             <button onclick="selecionarForma('Dinheiro')" class="btn-main" style="background:#22c55e; margin-bottom: 8px;">DINHEIRO</button>
@@ -182,32 +180,22 @@
         </div>
     </div>
 
-    <div id="modalExcluirProd" class="modal">
-        <div class="modal-content">
-            <div class="section-title">Excluir da Lista</div>
-            <label>Selecione o produto para remover:</label>
-            <select id="select-excluir-prod" style="margin: 15px 0;"></select>
-            <button onclick="confirmarExclusaoProd()" class="btn-main" style="background:var(--vermelho-alerta);">EXCLUIR DEFINITIVAMENTE</button>
-            <button onclick="fecharModalExcluir()" style="background:none; color:#94a3b8; width:100%; margin-top:15px">CANCELAR</button>
-        </div>
-    </div>
-
     <div id="print-section"></div>
 
     <script>
         const appStartTime = Date.now();
 
-        function solicitarPermissaoNotificacao() {
-            if (!("Notification" in window)) return;
-            if (Notification.permission === "default") {
-                Notification.requestPermission();
-            }
+        // 1. LIMPEZA DE CACHE AO INICIAR
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(regs => {
+                for(let reg of regs) { reg.update(); } // Força o SW a procurar código novo
+            });
         }
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(reg => { 
-                console.log("Service Worker ativo");
-            });
+        function solicitarPermissaoNotificacao() {
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
         }
 
         const firebaseConfig = {
@@ -222,78 +210,17 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let listaProdutosBase = [];
-        let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
+        let listaProdutosBase = [], todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null, contadorProdutos = 0;
 
+        // Gerenciamento de Produtos
         db.ref('configuracoes/produtos').on('value', (snap) => {
             listaProdutosBase = [];
             if(snap.exists()){ snap.forEach(child => { listaProdutosBase.push(child.val()); }); }
             listaProdutosBase.sort();
             atualizarListasMenu();
-            document.querySelectorAll('[id^="prod-"]').forEach(sel => {
-                const val = sel.value;
-                sel.innerHTML = '<option value="">Produto...</option>' + listaProdutosBase.map(p => `<option value="${p}" ${p===val?'selected':''}>${p}</option>`).join('');
-            });
         });
 
-        function gerenciarListaProdutos(acao) {
-            if(acao === 'add') {
-                let p = prompt("Nome do NOVO produto:");
-                if(p && p.trim() !== "") { p = formatarTexto(p.trim()); db.ref('configuracoes/produtos').push(p); }
-            }
-        }
-
-        function abrirModalExcluirProd() {
-            const sel = document.getElementById('select-excluir-prod');
-            sel.innerHTML = '<option value="">Selecione um produto...</option>' + listaProdutosBase.map(p => `<option value="${p}">${p}</option>`).join('');
-            document.getElementById('modalExcluirProd').style.display = 'flex';
-        }
-
-        function fecharModalExcluir() { document.getElementById('modalExcluirProd').style.display = 'none'; }
-
-        function confirmarExclusaoProd() {
-            const p = document.getElementById('select-excluir-prod').value;
-            if(!p) return;
-            if(confirm(`Remover "${p}" da lista?`)) {
-                db.ref('configuracoes/produtos').once('value', snap => {
-                    snap.forEach(child => { if(child.val() === p) child.ref.remove(); });
-                });
-                fecharModalExcluir();
-            }
-        }
-
-        function tocarBeep() {
-            try {
-                const context = new (window.AudioContext || window.webkitAudioContext)();
-                const gain = context.createGain();
-                gain.connect(context.destination);
-                gain.gain.setValueAtTime(0.4, context.currentTime);
-                const playNote = (freq, start, duration) => {
-                    const osc = context.createOscillator();
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(freq, start);
-                    osc.connect(gain); osc.start(start); osc.stop(start + duration);
-                };
-                playNote(440, context.currentTime, 0.1); 
-                playNote(880, context.currentTime + 0.1, 0.2); 
-            } catch (e) { }
-        }
-
-        function enviarNotificacao(titulo, corpo) {
-            if (Notification.permission === 'granted') {
-                navigator.serviceWorker.ready.then(reg => {
-                    reg.showNotification(titulo, { 
-                        body: corpo, 
-                        icon: 'logo.png',
-                        badge: 'logo.png',
-                        vibrate: [200, 100, 200],
-                        requireInteraction: true
-                    });
-                });
-            }
-        }
-
         function formatarTexto(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
-        function verificarNovoCliente(s) { if (s.value === "NOVO_CLIENTE") { let n = prompt("Nome do novo cliente:"); if (n && n.trim() !== "") { n = formatarTexto(n.trim()); const o = document.createElement("option"); o.value = n; o.text = n; o.selected = true; s.add(o); } else { s.value = ""; } } }
         
         function adicionarLinhaProduto(p="", q=1, v="") {
             contadorProdutos++;
@@ -302,18 +229,18 @@
             let oQ = ""; for(let i=1; i<=100; i++) oQ += `<option value="${i}" ${i == q ? 'selected' : ''}>${i}</option>`;
             let oP = `<option value="">Produto...</option>`;
             listaProdutosBase.forEach(item => { oP += `<option value="${item}" ${item === p ? 'selected' : ''}>${item}</option>`; });
-            div.innerHTML = `<select id="prod-${contadorProdutos}">${oP}</select><select id="qtd-${contadorProdutos}">${oQ}</select><input type="number" id="preco-${contadorProdutos}" value="${v}" step="0.01" placeholder="R$"><button class="btn-remove-item" onclick="removerLinha(${contadorProdutos})">×</button>`;
+            div.innerHTML = `<select id="prod-${contadorProdutos}">${oP}</select><select id="qtd-${contadorProdutos}">${oQ}</select><input type="number" id="preco-${contadorProdutos}" value="${v}" step="0.01" placeholder="R$"><button style="color:red; background:none; font-size:20px;" onclick="removerLinha(${contadorProdutos})">×</button>`;
             document.getElementById('container-produtos').appendChild(div);
         }
-        
-        function removerLinha(id) { if(document.getElementById(`linha-${id}`)) document.getElementById(`linha-${id}`).remove(); }
+        function removerLinha(id) { document.getElementById(`linha-${id}`).remove(); }
 
         function salvarPedido() {
             const idEdit = document.getElementById('edit-id').value;
             const cliente = document.getElementById('cliente').value;
             const data = document.getElementById('data').value;
-            let obs = document.getElementById('descricao').value;
-            if(!cliente || !data || cliente === "NOVO_CLIENTE") return alert("Preencha cliente e data");
+            const obs = document.getElementById('descricao').value;
+            if(!cliente || !data) return alert("Preencha cliente e data");
+            
             let itens = [], total = 0;
             document.querySelectorAll('.grid-prod').forEach(l => {
                 const idNum = l.id.split('-')[1];
@@ -329,10 +256,7 @@
             const dados = { data, cliente, itens, total, descricao: obs || "", timestamp: firebase.database.ServerValue.TIMESTAMP };
             
             if(idEdit) {
-                db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => { 
-                    enviarNotificacao("Pedido Editado", `${cliente}: R$ ${total.toFixed(2)}`);
-                    cancelarEdicao(); 
-                });
+                db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => cancelarEdicao());
             } else {
                 const nid = db.ref('pedidos').push().key;
                 db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false});
@@ -340,33 +264,19 @@
             }
         }
 
-        db.ref('pedidos').on('child_added', (snapshot) => {
-            const p = snapshot.val();
-            if (p && p.timestamp && p.timestamp > appStartTime && !p.editado) {
-                tocarBeep();
-                enviarNotificacao("Novo Pedido", `${p.cliente}: R$ ${p.total.toFixed(2)}`);
-            }
-        });
-
         db.ref('pedidos').on('value', (snap) => {
             todosPedidos = []; snap.forEach(c => { todosPedidos.push(c.val()); });
             todosPedidos.sort((a,b) => b.timestamp - a.timestamp);
-            atualizarListasMenu(); listarPedidos();
+            listarPedidos();
         });
-
-        function atualizarListasMenu() {
-            const sc = document.getElementById('cliente'), fc = document.getElementById('filtro-cliente'), fp = document.getElementById('filtro-produto'), val = sc.value;
-            const cSet = new Set(); todosPedidos.forEach(p => { if(p.cliente) cSet.add(p.cliente); });
-            sc.innerHTML = '<option value="">Selecione...</option><option value="NOVO_CLIENTE">+ NOVO CLIENTE...</option>';
-            [...cSet].sort().forEach(c => { const o = document.createElement('option'); o.value = c; o.text = c; if(c === val) o.selected = true; sc.add(o); });
-            fc.innerHTML = '<option value="">Todos</option>'; [...cSet].sort().forEach(c => { fc.innerHTML += `<option value="${c}">${c}</option>`; });
-            fp.innerHTML = '<option value="">Todos</option>'; listaProdutosBase.forEach(p => { fp.innerHTML += `<option value="${p}">${p}</option>`; });
-        }
 
         function listarPedidos() {
             const lista = document.getElementById('listaPedidos');
-            const fC = document.getElementById('filtro-cliente').value, fP = document.getElementById('filtro-produto').value, fI = document.getElementById('filtro-inicio').value, fF = document.getElementById('filtro-fim').value;
-            const agora = Date.now();
+            const fC = document.getElementById('filtro-cliente').value;
+            const fP = document.getElementById('filtro-produto').value;
+            const fI = document.getElementById('filtro-inicio').value;
+            const fF = document.getElementById('filtro-fim').value;
+            
             lista.innerHTML = "";
             const filtrados = todosPedidos.filter(p => {
                 let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
@@ -375,23 +285,13 @@
                 let pD = (!fI || p.data >= fI) && (!fF || p.data <= fF);
                 return pM && pC && pP && pD;
             });
+
             filtrados.forEach(p => {
                 let entOk = p.entrega === 'Entregue'; let pagOk = p.pagamento === 'Pago';
-                let isNovo = (agora - p.timestamp < 86400000) && p.entrega === 'Pendente' && p.pagamento === 'Pendente';
-                let cor = entOk ? (pagOk ? "var(--verde-claro)" : "var(--vermelho-alerta)") : "var(--cinza-pendente)";
-                lista.innerHTML += `<div class="pedido-item" style="border-left-color: ${cor}">
-                    ${isNovo ? '<span class="badge-novo">NOVO</span>' : ''}
-                    <button class="btn-del" onclick="excluirPedido('${p.id}')">✕</button>
+                lista.innerHTML += `<div class="pedido-item" style="border-left: 6px solid ${entOk ? (pagOk ? '#2e7d32' : '#c62828') : '#94a3b8'}">
                     <div style="font-size:10px; color:#94a3b8;">${p.data.split('-').reverse().join('/')}</div>
                     <div style="font-weight:700; font-size:15px; margin:3px 0;">${p.cliente}</div>
                     <div style="font-size:12px; color:#475569;">${(p.itens||[]).map(i=>`${i.qtd}x ${i.produto}`).join(', ')}</div>
-                    ${p.descricao ? `<div style="font-size:10px; color:var(--verde-claro); font-style:italic;">Obs: ${p.descricao}</div>` : ''}
-                    <div class="status-container">
-                        <span class="tag ${entOk?'tag-verde':''}">ENTREGA: ${p.entrega}</span>
-                        <span class="tag ${pagOk?'tag-verde':''}">PGTO: ${p.pagamento} ${p.formaPg?`(${p.formaPg})`:''}</span>
-                        ${p.editado ? `<span class="tag tag-editado">EDITADO</span>` : ''}
-                    </div>
-                    <div class="total-row"><span class="total-val">R$ ${p.total.toFixed(2)}</span></div>
                     <div class="actions">
                         <button class="btn-mini" onclick="prepararEdicao('${p.id}')">EDITAR</button>
                         <button class="btn-mini ${entOk?'btn-active-delivery':''}" onclick="confirmarEntrega('${p.id}')">${entOk ? 'ENTREGUE' : 'ENTREGA'}</button>
@@ -401,6 +301,7 @@
             });
         }
 
+        // FUNÇÃO DE IMPRESSÃO - CORRIGIDA PARA NÃO FICAR BRANCA
         function gerarRelatorioImpressao() {
             const fC = document.getElementById('filtro-cliente').value;
             const fP = document.getElementById('filtro-produto').value;
@@ -415,81 +316,88 @@
                 return pM && pC && pP && pD;
             });
 
-            if(filtrados.length === 0) return alert("Nenhum pedido nos filtros atuais.");
+            if(filtrados.length === 0) return alert("Nenhum pedido filtrado.");
 
-            let totalValorGeral = 0;
-            let totalItensGeral = 0;
+            let totalValor = 0;
             let htmlCorpo = "";
 
             filtrados.forEach(p => {
-                htmlCorpo += `<div style="border-bottom: 1px solid #eee; padding: 10px 0;">
-                    <div style="font-weight: bold; font-size: 14px;">${p.cliente} - ${p.data.split('-').reverse().join('/')}</div>
-                    <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Status: Entrega ${p.entrega} / Pagamento ${p.pagamento}</div>`;
-                
+                htmlCorpo += `<div style="border-bottom: 1px solid #ccc; padding: 8px 0;">
+                    <strong>${p.cliente} (${p.data.split('-').reverse().join('/')})</strong><br>`;
                 p.itens.forEach(i => {
-                    const subtotal = i.qtd * i.preco;
-                    totalValorGeral += subtotal;
-                    totalItensGeral += i.qtd;
-                    htmlCorpo += `<div style="font-size: 13px; margin-left: 10px;">• ${i.qtd}x ${i.produto} - R$ ${i.preco.toFixed(2)} (Sub: R$ ${subtotal.toFixed(2)})</div>`;
+                    const sub = i.qtd * i.preco;
+                    totalValor += sub;
+                    htmlCorpo += `<span style="margin-left:15px;">• ${i.qtd}x ${i.produto} - R$ ${sub.toFixed(2)}</span><br>`;
                 });
-                
-                if(p.descricao) htmlCorpo += `<div style="font-size: 10px; font-style: italic; color: #2e7d32; margin-top: 3px;">Obs: ${p.descricao}</div>`;
+                if(p.descricao) htmlCorpo += `<em style="font-size:11px; color:green;">Obs: ${p.descricao}</em><br>`;
                 htmlCorpo += `</div>`;
             });
 
             const printDiv = document.getElementById('print-section');
             printDiv.innerHTML = `
-                <div style="padding: 20px; font-family: 'Inter', sans-serif; color: #1e293b;">
-                    <div style="text-align: center; border-bottom: 2px solid #0a3d1d; padding-bottom: 10px; margin-bottom: 20px;">
-                        <h2 style="margin: 0; color: #0a3d1d;">BRAGANTE AGRO</h2>
-                        <div style="font-size: 12px; font-weight: bold;">RELATÓRIO DE PEDIDOS - ${modoAtual.toUpperCase()}</div>
-                        <div style="font-size: 10px;">Gerado em: ${new Date().toLocaleString()}</div>
-                    </div>
+                <div style="padding: 20px; color: black !important; background: white !important;">
+                    <h2 style="text-align:center; margin-bottom:0;">BRAGANTE AGRO</h2>
+                    <p style="text-align:center; margin-top:5px;">RELATÓRIO: ${modoAtual.toUpperCase()}</p>
+                    <hr>
                     ${htmlCorpo}
-                    <div style="margin-top: 20px; padding: 15px; background: #f1f5f9; border-radius: 8px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold;">
-                            <span>TOTAL DE ITENS:</span>
-                            <span>${totalItensGeral}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 900; color: #0a3d1d; margin-top: 10px; border-top: 1px solid #cbd5e1; padding-top: 10px;">
-                            <span>VALOR TOTAL GERAL:</span>
-                            <span>R$ ${totalValorGeral.toFixed(2)}</span>
-                        </div>
+                    <div style="margin-top:20px; font-size:18px; text-align:right;">
+                        <strong>VALOR TOTAL GERAL: R$ ${totalValor.toFixed(2)}</strong>
                     </div>
                 </div>`;
 
-            window.print();
-            setTimeout(() => { printDiv.innerHTML = ""; }, 1000);
+            // Pequeno atraso para garantir que o navegador "leia" o texto antes de imprimir
+            setTimeout(() => {
+                window.print();
+            }, 500);
         }
 
-        function confirmarEntrega(id) {
-            const p = todosPedidos.find(x=>x.id===id);
-            if(p.entrega === 'Entregue') {
-                if(confirm("Deseja estornar a entrega para PENDENTE?")) db.ref('pedidos/'+id).update({entrega:'Pendente'});
-            } else {
-                if(confirm("O pedido foi entregue?")) {
-                    db.ref('pedidos/'+id).update({entrega:'Entregue'});
-                    if(p.pagamento === 'Pendente' && confirm("O pedido já foi pago?")) abrirModal(id);
-                }
-            }
+        // Funções de Controle (Edição, Status, etc)
+        function prepararEdicao(id) { 
+            const p = todosPedidos.find(x => x.id === id); 
+            document.getElementById('edit-id').value = p.id; 
+            document.getElementById('cliente').value = p.cliente; 
+            document.getElementById('data').value = p.data; 
+            document.getElementById('descricao').value = p.descricao || ""; 
+            document.getElementById('container-produtos').innerHTML = ""; 
+            (p.itens||[]).forEach(i => adicionarLinhaProduto(i.produto, i.qtd, i.preco)); 
+            document.getElementById('btn-cancelar').style.display = 'block'; 
+            window.scrollTo(0,0);
+        }
+        
+        function cancelarEdicao() { 
+            document.getElementById('edit-id').value = ""; 
+            document.getElementById('container-produtos').innerHTML = ""; 
+            document.getElementById('descricao').value = "";
+            document.getElementById('btn-cancelar').style.display = 'none';
+            adicionarLinhaProduto(); 
         }
 
-        function gerenciarPgto(id) { 
-            const p = todosPedidos.find(x=>x.id===id); 
-            if(p.pagamento==='Pago') { if(confirm("Deseja estornar o pagamento para PENDENTE?")) db.ref('pedidos/'+id).update({pagamento:'Pendente', formaPg:''}); } 
-            else { abrirModal(id); }
-        }
-
-        function mudarModo(m) { modoAtual = m; document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active')); document.getElementById('nav-' + m).classList.add('active'); listarPedidos(); }
-        function cancelarEdicao() { document.getElementById('edit-id').value = ""; document.getElementById('cliente').value = ""; document.getElementById('descricao').value = ""; document.getElementById('container-produtos').innerHTML = ""; adicionarLinhaProduto(); document.getElementById('btn-cancelar').style.display = 'none'; }
-        function prepararEdicao(id) { const p = todosPedidos.find(x => x.id === id); document.getElementById('edit-id').value = p.id; document.getElementById('cliente').value = p.cliente; document.getElementById('data').value = p.data; document.getElementById('descricao').value = p.descricao || ""; document.getElementById('container-produtos').innerHTML = ""; (p.itens||[]).forEach(i => adicionarLinhaProduto(i.produto, i.qtd, i.preco)); document.getElementById('btn-cancelar').style.display = 'block'; window.scrollTo({top:0, behavior:'smooth'}); }
-        function excluirPedido(id) { if(confirm("Excluir?")) db.ref('pedidos/'+id).remove(); }
-        function abrirModal(id) { pedidoEmPagamento = id; document.getElementById('modalPagamento').style.display='flex'; }
-        function fecharModal() { document.getElementById('modalPagamento').style.display='none'; }
+        function confirmarEntrega(id) { if(confirm("Mudar status da entrega?")) { const p = todosPedidos.find(x=>x.id===id); db.ref('pedidos/'+id).update({entrega: p.entrega === 'Entregue' ? 'Pendente' : 'Entregue'}); } }
+        function gerenciarPgto(id) { pedidoEmPagamento = id; document.getElementById('modalPagamento').style.display = 'flex'; }
+        function fecharModal() { document.getElementById('modalPagamento').style.display = 'none'; }
         function selecionarForma(f) { db.ref('pedidos/'+pedidoEmPagamento).update({pagamento:'Pago', formaPg:f}); fecharModal(); }
-        function selecionarOutros() { const d = prompt("Qual?"); if (d) selecionarForma(d); }
+        
+        function mudarModo(m) { 
+            modoAtual = m; 
+            document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active')); 
+            document.getElementById('nav-' + m).classList.add('active'); 
+            listarPedidos(); 
+        }
+
         function toggleAccordion() { const p = document.getElementById("filtroPanel"); p.style.display = p.style.display === "block" ? "none" : "block"; }
-        function limparFiltros() { document.getElementById('filtro-cliente').value = ""; document.getElementById('filtro-produto').value = ""; document.getElementById('filtro-inicio').value = ""; document.getElementById('filtro-fim').value = ""; listarPedidos(); }
+        function limparFiltros() { 
+            document.querySelectorAll('#filtroPanel select, #filtroPanel input').forEach(i => i.value = ""); 
+            listarPedidos(); 
+        }
+
+        function atualizarListasMenu() {
+            const sc = document.getElementById('cliente'), fc = document.getElementById('filtro-cliente'), fp = document.getElementById('filtro-produto');
+            const cSet = new Set(); todosPedidos.forEach(p => cSet.add(p.cliente));
+            sc.innerHTML = '<option value="">Selecione...</option><option value="NOVO_CLIENTE">+ NOVO CLIENTE...</option>';
+            [...cSet].sort().forEach(c => { sc.innerHTML += `<option value="${c}">${c}</option>`; });
+            fc.innerHTML = '<option value="">Todos</option>'; [...cSet].sort().forEach(c => { fc.innerHTML += `<option value="${c}">${c}</option>`; });
+            fp.innerHTML = '<option value="">Todos</option>'; listaProdutosBase.forEach(p => { fp.innerHTML += `<option value="${p}">${p}</option>`; });
+        }
 
         document.getElementById('data').valueAsDate = new Date();
         adicionarLinhaProduto();
