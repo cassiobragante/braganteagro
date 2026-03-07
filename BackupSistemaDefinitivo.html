@@ -97,11 +97,20 @@
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding: 20px; }
         .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center; }
 
+        /* Estilo de Impressão Otimizado */
         #print-section { display: none; }
         @media print {
             body * { visibility: hidden; }
             #print-section, #print-section * { visibility: visible; }
-            #print-section { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background-color: white; }
+            #print-section { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                display: block !important; 
+                background: white; 
+                color: black;
+            }
         }
     </style>
 </head>
@@ -172,6 +181,7 @@
         <div id="listaPedidos"></div>
     </div>
 
+    <!-- Modais e Container de Impressão -->
     <div id="modalPagamento" class="modal">
         <div class="modal-content">
             <div class="section-title">Recebimento</div>
@@ -195,6 +205,7 @@
     <div id="print-section"></div>
 
     <script>
+        // Configuração e Firebase Inalterados
         const appStartTime = Date.now();
 
         function solicitarPermissaoNotificacao() {
@@ -205,9 +216,7 @@
         }
 
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(reg => { 
-                console.log("Service Worker ativo");
-            });
+            navigator.serviceWorker.register('sw.js').then(reg => { console.log("SW ok"); });
         }
 
         const firebaseConfig = {
@@ -225,6 +234,7 @@
         let listaProdutosBase = [];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
 
+        // Funções de Gerenciamento Inalteradas
         db.ref('configuracoes/produtos').on('value', (snap) => {
             listaProdutosBase = [];
             if(snap.exists()){ snap.forEach(child => { listaProdutosBase.push(child.val()); }); }
@@ -283,14 +293,7 @@
         function enviarNotificacao(titulo, corpo) {
             if (Notification.permission === 'granted') {
                 navigator.serviceWorker.ready.then(reg => {
-                    reg.showNotification(titulo, { 
-                        body: corpo, 
-                        icon: 'logo.png',
-                        badge: 'logo.png',
-                        vibrate: [200, 100, 200],
-                        tag: 'pedido-agro',
-                        renotify: true
-                    });
+                    reg.showNotification(titulo, { body: corpo, icon: 'logo.png' });
                 });
             }
         }
@@ -421,7 +424,7 @@
                 return pM && pC && pP && pD;
             });
 
-            if(filtrados.length === 0) return alert("Nenhum pedido nos filtros atuais.");
+            if(filtrados.length === 0) return alert("Nenhum pedido encontrado nos filtros atuais para o relatório.");
 
             let totalValorGeral = 0, resumoItens = {}, htmlPedidos = "";
 
@@ -432,17 +435,13 @@
                 (p.itens || []).forEach(i => {
                     const subtotal = i.qtd * i.preco;
                     totalValorGeral += subtotal;
-                    
-                    // Somar para a listagem final de itens
                     if (!resumoItens[i.produto]) resumoItens[i.produto] = 0;
                     resumoItens[i.produto] += i.qtd;
-
                     htmlPedidos += `<div style="font-size: 12px; margin-left: 10px;">• ${i.qtd}x ${i.produto} - R$ ${subtotal.toFixed(2)}</div>`;
                 });
                 htmlPedidos += `</div>`;
             });
 
-            // Gerar HTML da lista de itens e quantidades final
             let htmlResumoItens = '<div style="margin-top:20px; border-top: 2px solid #0a3d1d; padding-top:10px;"><div style="font-weight:900; margin-bottom:10px;">RESUMO DE ITENS:</div>';
             for (let prod in resumoItens) {
                 htmlResumoItens += `<div style="font-size:13px; display:flex; justify-content:space-between;"><span>${prod}</span> <span>${resumoItens[prod]} un.</span></div>`;
@@ -451,10 +450,10 @@
 
             const printDiv = document.getElementById('print-section');
             printDiv.innerHTML = `
-                <div style="padding:40px; font-family:'Inter', sans-serif; color: black; background: white;">
+                <div style="padding:40px; font-family:'Inter', sans-serif;">
                     <div style="text-align:center; border-bottom: 2px solid #0a3d1d; padding-bottom: 10px; margin-bottom: 20px;">
                         <h2 style="margin:0; color:#0a3d1d;">BRAGANTE AGRO</h2>
-                        <p style="margin:5px 0; font-size:12px; font-weight:bold;">RELATÓRIO: ${modoAtual.toUpperCase()}</p>
+                        <p style="margin:5px 0; font-size:12px; font-weight:bold;">RELATÓRIO DE PEDIDOS (${modoAtual.toUpperCase()})</p>
                     </div>
                     ${htmlPedidos}
                     ${htmlResumoItens}
@@ -470,6 +469,7 @@
             window.print();
         }
 
+        // Outras Funções Auxiliares Inalteradas
         function confirmarEntrega(id) {
             const p = todosPedidos.find(x=>x.id===id);
             if(p.entrega === 'Entregue') {
