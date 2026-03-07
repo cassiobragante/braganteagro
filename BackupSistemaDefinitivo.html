@@ -7,18 +7,10 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     
-    <!-- Meta tags para evitar cache -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0a3d1d">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="logo.png">
-    <link rel="icon" type="image/png" href="logo.png">
-
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
@@ -34,100 +26,61 @@
         }
         body { font-family: 'Inter', sans-serif; background-color: var(--neutro-bg); margin: 0; padding: 0; color: var(--texto-principal); display: flex; justify-content: center; -webkit-tap-highlight-color: transparent; } 
         .app-container { width: 100%; max-width: 500px; background-color: #f8fafc; min-height: 100vh; padding: 15px; box-sizing: border-box; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 20px; padding-top: 10px; }
-        .header h1 { margin: 0; font-size: 22px; font-weight: 900; text-transform: uppercase; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 900; }
         .header .bragante { color: var(--verde-escuro); }
         .header .agro { color: var(--verde-claro); }
-        .header p { margin: 4px 0; font-size: 9px; color: #64748b; letter-spacing: 1px; font-weight: bold; text-transform: uppercase; }
         
-        .header .form-title { 
-            font-family: 'Montserrat', sans-serif;
-            font-size: 18px; 
-            color: var(--verde-escuro); 
-            font-weight: 800; 
-            margin-top: 10px; 
-            border-top: 1px solid var(--neutro-borda); 
-            display: inline-block; 
-            padding: 8px 40px 0 40px; 
-            letter-spacing: 4px; 
-        }
-
-        .card { background: #ffffff; padding: 16px; border-radius: 10px; border: 1px solid var(--neutro-borda); margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card { background: #ffffff; padding: 16px; border-radius: 10px; border: 1px solid var(--neutro-borda); margin-bottom: 12px; }
         .section-title { font-size: 11px; font-weight: 700; color: var(--verde-escuro); text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
         
-        .manage-wrapper { text-align: right; }
-        .btn-manage-list { width: 22px; height: 22px; border-radius: 4px; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; color: white; border: none; cursor: pointer; background: var(--verde-claro); }
-        .label-manage { font-size: 7px; color: var(--verde-claro); font-weight: bold; display: block; margin-top: 2px; text-align: right; }
-
-        .form-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 12px; }
         .col-data { flex: 0 0 125px; }
         .col-cliente { flex: 1; }
         label { display: block; font-size: 10px; font-weight: 600; color: #64748b; margin-bottom: 5px; }
-        input, select, textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--neutro-borda); font-size: 14px; outline: none; box-sizing: border-box; background: white; }
+        input, select, textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--neutro-borda); font-size: 14px; box-sizing: border-box; }
+        
         .grid-prod { display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 8px; margin-bottom: 8px; align-items: center; }
-        button { cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 11px; text-transform: uppercase; border: none; }
-        .btn-main { background: var(--verde-escuro); color: white; padding: 14px; width: 100%; margin-top: 10px; font-size: 13px; }
-        .btn-add { background: transparent; color: var(--verde-claro); border: 1px dashed var(--verde-claro); padding: 9px; margin-bottom: 12px; width: 100%; }
+        button { cursor: pointer; border-radius: 6px; font-weight: 600; border: none; }
+        .btn-main { background: var(--verde-escuro); color: white; padding: 14px; width: 100%; margin-top: 10px; }
+        .btn-add { background: transparent; color: var(--verde-claro); border: 1px dashed var(--verde-claro); padding: 9px; width: 100%; margin-bottom: 10px; }
+        
         .btn-nav-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 10px; }
-        .btn-nav { background: #64748b; color: white; padding: 12px 5px; font-size: 8.5px; line-height: 1.2; }
+        .btn-nav { background: #64748b; color: white; padding: 12px 5px; font-size: 8.5px; }
         .btn-nav.active { background: var(--verde-escuro); border: 2px solid var(--verde-claro); }
-        .btn-report { background: #94a3b8; color: white; padding: 12px; margin-bottom: 20px; width: 100%; }
-        .accordion { background: #f1f5f9; color: var(--texto-principal); padding: 10px; width: 100%; text-align: left; border: 1px solid var(--neutro-borda); border-radius: 6px; margin-bottom: 5px; display: flex; justify-content: space-between; }
-        .panel { display: none; background: white; padding: 15px; border: 1px solid var(--neutro-borda); border-top: none; border-radius: 0 0 6px 6px; margin-bottom: 15px; }
-        .pedido-item { background: white; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--neutro-borda); position: relative; border-left-width: 6px; border-left-style: solid; }
-        .tag { font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #e2e8f0; color: #64748b; }
-        .tag-verde { background: #dcfce7; color: #166534; }
-        .tag-editado { background: #fee2e2; color: #991b1b; }
-        .total-row { display: flex; justify-content: space-between; border-top: 1px solid #f1f5f9; margin-top: 12px; padding-top: 10px; }
-        .total-val { font-weight: 700; color: var(--verde-escuro); font-size: 15px; }
+        
+        .btn-report { background: #94a3b8; color: white; padding: 15px; width: 100%; margin-bottom: 20px; font-size: 13px; }
+        
+        .pedido-item { background: white; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--neutro-borda); position: relative; border-left: 6px solid #94a3b8; }
         .actions { display: flex; gap: 6px; margin-top: 12px; }
-        .btn-mini { flex: 1; padding: 10px; font-size: 10px; background: #f8fafc; border: 1px solid var(--neutro-borda); color: #475569; }
+        .btn-mini { flex: 1; padding: 10px; font-size: 10px; background: #f8fafc; border: 1px solid var(--neutro-borda); }
         .btn-active-delivery { background: var(--verde-claro) !important; color: white !important; }
         .btn-active-pay { background: #1e40af !important; color: white !important; }
 
-        /* Estilo da Impressão Corrigido */
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; }
+        .modal-content { background:white; padding:20px; border-radius:12px; width:90%; max-width: 300px; text-align: center; }
+
+        /* Estilo Exclusivo de Impressão */
         #print-section { display: none; }
         @media print {
-            body { background: white !important; }
-            .app-container { display: none !important; }
-            #print-section { 
-                display: block !important; 
-                position: absolute; 
-                left: 0; 
-                top: 0; 
-                width: 100%; 
-                background: white !important;
-                visibility: visible !important;
-            }
-            #print-section * { visibility: visible !important; color: black !important; }
+            body * { visibility: hidden; }
+            #print-section, #print-section * { visibility: visible; }
+            #print-section { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
 <body onclick="solicitarPermissaoNotificacao()">
 
-    <div class="app-container">
+    <div class="app-container no-print">
         <div class="header">
             <h1><span class="bragante">BRAGANTE</span> <span class="agro">AGRO</span></h1>
-            <p>Estância São Francisco do Balsamo</p>
-            <div class="form-title">PEDIDOS</div>
         </div>
 
         <div class="card">
-            <div class="section-title">
-                NOVO PEDIDO 
-                <div class="manage-wrapper">
-                    <div>
-                        <button class="btn-manage-list" onclick="gerenciarListaProdutos('add')">+</button>
-                        <button class="btn-manage-list" onclick="abrirModalExcluirProd()">-</button>
-                    </div>
-                    <span class="label-manage">EDITAR PRODUTOS</span>
-                </div>
-            </div>
+            <div class="section-title">NOVO PEDIDO</div>
             <div class="form-row">
-                <div class="col-data">
-                    <label>Data</label>
-                    <input type="date" id="data">
-                </div>
+                <div class="col-data"><label>Data</label><input type="date" id="data"></div>
                 <div class="col-cliente">
                     <label>Cliente</label>
                     <select id="cliente" onchange="verificarNovoCliente(this)">
@@ -138,66 +91,36 @@
             </div>
             <div id="container-produtos"></div>
             <button class="btn-add" onclick="adicionarLinhaProduto()">+ Adicionar Item</button>
-            <label>Observação Geral</label>
             <textarea id="descricao" rows="2" placeholder="Observações..."></textarea>
             <input type="hidden" id="edit-id">
             <button class="btn-main" onclick="salvarPedido()">SALVAR PEDIDO</button>
-            <button id="btn-cancelar" onclick="cancelarEdicao()" style="display:none; background:#f1f5f9; color:#64748b; margin-top:8px; width:100%; padding:10px;">CANCELAR EDIÇÃO</button>
-        </div>
-
-        <button class="accordion" onclick="toggleAccordion()">🔍 FILTRAR BUSCA <span>▼</span></button>
-        <div class="panel" id="filtroPanel">
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px">
-                <div><label>Filtro Cliente</label><select id="filtro-cliente" onchange="listarPedidos()"><option value="">Todos</option></select></div>
-                <div><label>Filtro Produto</label><select id="filtro-produto" onchange="listarPedidos()"><option value="">Todos</option></select></div>
-            </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
-                <div><label>Início</label><input type="date" id="filtro-inicio" onchange="listarPedidos()"></div>
-                <div><label>Fim</label><input type="date" id="filtro-fim" onchange="listarPedidos()"></div>
-            </div>
-            <button onclick="limparFiltros()" style="margin-top:10px; background:none; color:var(--vermelho-alerta); width:100%; font-size:9px">LIMPAR FILTROS</button>
+            <button id="btn-cancelar" onclick="cancelarEdicao()" style="display:none; width:100%; margin-top:5px; padding:10px;">CANCELAR</button>
         </div>
 
         <div class="btn-nav-group">
-            <button id="nav-entregas" class="btn-nav active" onclick="mudarModo('entregas')">ENTREGAS PENDENTES</button>
-            <button id="nav-pagamentos" class="btn-nav" onclick="mudarModo('pagamentos')">PAGAMENTOS PENDENTES</button>
-            <button id="nav-todos" class="btn-nav" onclick="mudarModo('todos')">TODOS PEDIDOS</button>
+            <button id="nav-entregas" class="btn-nav active" onclick="mudarModo('entregas')">ENTREGAS</button>
+            <button id="nav-pagamentos" class="btn-nav" onclick="mudarModo('pagamentos')">PAGAMENTOS</button>
+            <button id="nav-todos" class="btn-nav" onclick="mudarModo('todos')">TODOS</button>
         </div>
         
-        <button class="btn-report" onclick="gerarRelatorioImpressao()">IMPRIMIR RELATÓRIO</button>
+        <!-- BOTÃO COM FUNÇÃO CORRIGIDA -->
+        <button class="btn-report" onclick="gerarRelatorio()">IMPRIMIR RELATÓRIO</button>
 
         <div id="listaPedidos"></div>
     </div>
 
-    <!-- Modais e Afins -->
-    <div id="modalPagamento" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding: 20px;">
-        <div class="modal-content" style="background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center;">
-            <div class="section-title">Recebimento</div>
-            <button onclick="selecionarForma('Pix')" class="btn-main" style="background:#14b8a6; margin-bottom: 8px;">PIX</button>
-            <button onclick="selecionarForma('Dinheiro')" class="btn-main" style="background:#22c55e; margin-bottom: 8px;">DINHEIRO</button>
-            <button onclick="selecionarOutros()" class="btn-main" style="background:#64748b; margin-bottom: 8px;">OUTROS</button>
-            <button onclick="fecharModal()" style="background:none; color:#94a3b8; width:100%; margin-top:15px">FECHAR</button>
+    <div id="modalPagamento" class="modal">
+        <div class="modal-content">
+            <h3>Pagamento</h3>
+            <button onclick="selecionarForma('Pix')" class="btn-main" style="background:#14b8a6">PIX</button><br>
+            <button onclick="selecionarForma('Dinheiro')" class="btn-main" style="background:#22c55e">DINHEIRO</button><br>
+            <button onclick="fecharModal()" style="margin-top:10px; background:none;">FECHAR</button>
         </div>
     </div>
 
     <div id="print-section"></div>
 
     <script>
-        const appStartTime = Date.now();
-
-        // 1. LIMPEZA DE CACHE AO INICIAR
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(regs => {
-                for(let reg of regs) { reg.update(); } // Força o SW a procurar código novo
-            });
-        }
-
-        function solicitarPermissaoNotificacao() {
-            if ("Notification" in window && Notification.permission === "default") {
-                Notification.requestPermission();
-            }
-        }
-
         const firebaseConfig = {
             apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
             authDomain: "bragante-agro.firebaseapp.com",
@@ -210,193 +133,181 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let listaProdutosBase = [], todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null, contadorProdutos = 0;
+        let todosPedidos = [], listaProdutosBase = [], modoAtual = 'entregas', pedidoEmPagamento = null, contadorProdutos = 0;
 
-        // Gerenciamento de Produtos
-        db.ref('configuracoes/produtos').on('value', (snap) => {
+        // Carregar Produtos
+        db.ref('configuracoes/produtos').on('value', snap => {
             listaProdutosBase = [];
-            if(snap.exists()){ snap.forEach(child => { listaProdutosBase.push(child.val()); }); }
-            listaProdutosBase.sort();
-            atualizarListasMenu();
+            snap.forEach(c => { listaProdutosBase.push(c.val()); });
+            atualizarClientes();
         });
 
-        function formatarTexto(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
-        
         function adicionarLinhaProduto(p="", q=1, v="") {
             contadorProdutos++;
             const div = document.createElement('div');
             div.className = 'grid-prod'; div.id = `linha-${contadorProdutos}`;
-            let oQ = ""; for(let i=1; i<=100; i++) oQ += `<option value="${i}" ${i == q ? 'selected' : ''}>${i}</option>`;
-            let oP = `<option value="">Produto...</option>`;
-            listaProdutosBase.forEach(item => { oP += `<option value="${item}" ${item === p ? 'selected' : ''}>${item}</option>`; });
-            div.innerHTML = `<select id="prod-${contadorProdutos}">${oP}</select><select id="qtd-${contadorProdutos}">${oQ}</select><input type="number" id="preco-${contadorProdutos}" value="${v}" step="0.01" placeholder="R$"><button style="color:red; background:none; font-size:20px;" onclick="removerLinha(${contadorProdutos})">×</button>`;
+            let oP = `<option value="">Produto...</option>` + listaProdutosBase.map(item => `<option value="${item}" ${item===p?'selected':''}>${item}</option>`).join('');
+            div.innerHTML = `<select id="prod-${contadorProdutos}">${oP}</select><input type="number" id="qtd-${contadorProdutos}" value="${q}"><input type="number" id="preco-${contadorProdutos}" value="${v}" step="0.01" placeholder="R$"><button onclick="this.parentElement.remove()" style="color:red; background:none;">×</button>`;
             document.getElementById('container-produtos').appendChild(div);
         }
-        function removerLinha(id) { document.getElementById(`linha-${id}`).remove(); }
 
         function salvarPedido() {
-            const idEdit = document.getElementById('edit-id').value;
+            const id = document.getElementById('edit-id').value;
             const cliente = document.getElementById('cliente').value;
             const data = document.getElementById('data').value;
-            const obs = document.getElementById('descricao').value;
-            if(!cliente || !data) return alert("Preencha cliente e data");
-            
+            if(!cliente || !data) return alert("Preencha tudo");
+
             let itens = [], total = 0;
             document.querySelectorAll('.grid-prod').forEach(l => {
-                const idNum = l.id.split('-')[1];
-                const p = document.getElementById(`prod-${idNum}`).value;
-                if(p) {
-                    const q = parseInt(document.getElementById(`qtd-${idNum}`).value);
-                    const v = parseFloat(document.getElementById(`preco-${idNum}`).value) || 0;
-                    itens.push({produto: p, qtd: q, preco: v});
-                    total += (q * v);
+                const idN = l.id.split('-')[1];
+                const p = document.getElementById(`prod-${idN}`).value;
+                if(p){
+                    const q = parseInt(document.getElementById(`qtd-${idN}`).value) || 0;
+                    const v = parseFloat(document.getElementById(`preco-${idN}`).value) || 0;
+                    itens.push({produto:p, qtd:q, preco:v});
+                    total += (q*v);
                 }
             });
-            if(itens.length === 0) return alert("Adicione um item");
-            const dados = { data, cliente, itens, total, descricao: obs || "", timestamp: firebase.database.ServerValue.TIMESTAMP };
-            
-            if(idEdit) {
-                db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => cancelarEdicao());
+
+            const dados = { data, cliente, itens, total, timestamp: Date.now() };
+            if(id) {
+                db.ref('pedidos/'+id).update(dados).then(() => cancelarEdicao());
             } else {
-                const nid = db.ref('pedidos').push().key;
-                db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false});
+                const newId = db.ref('pedidos').push().key;
+                db.ref('pedidos/'+newId).set({...dados, id:newId, entrega:'Pendente', pagamento:'Pendente'});
                 cancelarEdicao();
             }
         }
 
-        db.ref('pedidos').on('value', (snap) => {
-            todosPedidos = []; snap.forEach(c => { todosPedidos.push(c.val()); });
+        db.ref('pedidos').on('value', snap => {
+            todosPedidos = [];
+            snap.forEach(c => { todosPedidos.push(c.val()); });
             todosPedidos.sort((a,b) => b.timestamp - a.timestamp);
             listarPedidos();
+            atualizarClientes();
         });
 
         function listarPedidos() {
             const lista = document.getElementById('listaPedidos');
-            const fC = document.getElementById('filtro-cliente').value;
-            const fP = document.getElementById('filtro-produto').value;
-            const fI = document.getElementById('filtro-inicio').value;
-            const fF = document.getElementById('filtro-fim').value;
-            
             lista.innerHTML = "";
             const filtrados = todosPedidos.filter(p => {
-                let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
-                let pC = fC === "" || p.cliente === fC;
-                let pP = fP === "" || (p.itens && p.itens.some(i => i.produto === fP));
-                let pD = (!fI || p.data >= fI) && (!fF || p.data <= fF);
-                return pM && pC && pP && pD;
+                if(modoAtual === 'entregas') return p.entrega === 'Pendente';
+                if(modoAtual === 'pagamentos') return p.pagamento === 'Pendente';
+                return true;
             });
 
             filtrados.forEach(p => {
-                let entOk = p.entrega === 'Entregue'; let pagOk = p.pagamento === 'Pago';
-                lista.innerHTML += `<div class="pedido-item" style="border-left: 6px solid ${entOk ? (pagOk ? '#2e7d32' : '#c62828') : '#94a3b8'}">
-                    <div style="font-size:10px; color:#94a3b8;">${p.data.split('-').reverse().join('/')}</div>
-                    <div style="font-weight:700; font-size:15px; margin:3px 0;">${p.cliente}</div>
-                    <div style="font-size:12px; color:#475569;">${(p.itens||[]).map(i=>`${i.qtd}x ${i.produto}`).join(', ')}</div>
-                    <div class="actions">
-                        <button class="btn-mini" onclick="prepararEdicao('${p.id}')">EDITAR</button>
-                        <button class="btn-mini ${entOk?'btn-active-delivery':''}" onclick="confirmarEntrega('${p.id}')">${entOk ? 'ENTREGUE' : 'ENTREGA'}</button>
-                        <button class="btn-mini ${pagOk?'btn-active-pay':''}" onclick="gerenciarPgto('${p.id}')">${pagOk ? 'PAGO' : 'PAGAR'}</button>
-                    </div>
-                </div>`;
+                const ent = p.entrega === 'Entregue';
+                const pag = p.pagamento === 'Pago';
+                lista.innerHTML += `
+                    <div class="pedido-item" style="border-left-color: ${ent ? (pag ? '#2e7d32' : '#c62828') : '#94a3b8'}">
+                        <strong>${p.cliente}</strong> - ${p.data}<br>
+                        <small>${(p.itens||[]).map(i => i.qtd+'x '+i.produto).join(', ')}</small><br>
+                        <strong>R$ ${p.total.toFixed(2)}</strong>
+                        <div class="actions">
+                            <button class="btn-mini" onclick="prepararEdicao('${p.id}')">EDITAR</button>
+                            <button class="btn-mini ${ent?'btn-active-delivery':''}" onclick="statusEntrega('${p.id}')">ENTREGA</button>
+                            <button class="btn-mini ${pag?'btn-active-pay':''}" onclick="abrirPgto('${p.id}')">PAGAR</button>
+                        </div>
+                    </div>`;
             });
         }
 
-        // FUNÇÃO DE IMPRESSÃO - CORRIGIDA PARA NÃO FICAR BRANCA
-        function gerarRelatorioImpressao() {
-            const fC = document.getElementById('filtro-cliente').value;
-            const fP = document.getElementById('filtro-produto').value;
-            const fI = document.getElementById('filtro-inicio').value;
-            const fF = document.getElementById('filtro-fim').value;
-            
+        // FUNÇÃO DE RELATÓRIO CORRIGIDA
+        function gerarRelatorio() {
             const filtrados = todosPedidos.filter(p => {
-                let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
-                let pC = fC === "" || p.cliente === fC;
-                let pP = fP === "" || (p.itens && p.itens.some(i => i.produto === fP));
-                let pD = (!fI || p.data >= fI) && (!fF || p.data <= fF);
-                return pM && pC && pP && pD;
+                if(modoAtual === 'entregas') return p.entrega === 'Pendente';
+                if(modoAtual === 'pagamentos') return p.pagamento === 'Pendente';
+                return true;
             });
 
-            if(filtrados.length === 0) return alert("Nenhum pedido filtrado.");
+            if(filtrados.length === 0) return alert("Nada para imprimir");
 
-            let totalValor = 0;
-            let htmlCorpo = "";
+            let totalGeral = 0;
+            let conteudo = `<div style="padding:20px; font-family:Arial;">
+                <h2 style="text-align:center;">BRAGANTE AGRO - RELATÓRIO</h2>
+                <p style="text-align:center;">Modo: ${modoAtual.toUpperCase()} | Data: ${new Date().toLocaleDateString()}</p><hr>`;
 
             filtrados.forEach(p => {
-                htmlCorpo += `<div style="border-bottom: 1px solid #ccc; padding: 8px 0;">
-                    <strong>${p.cliente} (${p.data.split('-').reverse().join('/')})</strong><br>`;
+                conteudo += `<div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;">
+                    <strong>${p.cliente}</strong> (${p.data.split('-').reverse().join('/')})<br>`;
                 p.itens.forEach(i => {
                     const sub = i.qtd * i.preco;
-                    totalValor += sub;
-                    htmlCorpo += `<span style="margin-left:15px;">• ${i.qtd}x ${i.produto} - R$ ${sub.toFixed(2)}</span><br>`;
+                    totalGeral += sub;
+                    conteudo += `<span style="margin-left:15px;">• ${i.qtd}x ${i.produto} - R$ ${sub.toFixed(2)}</span><br>`;
                 });
-                if(p.descricao) htmlCorpo += `<em style="font-size:11px; color:green;">Obs: ${p.descricao}</em><br>`;
-                htmlCorpo += `</div>`;
+                conteudo += `</div>`;
             });
 
-            const printDiv = document.getElementById('print-section');
-            printDiv.innerHTML = `
-                <div style="padding: 20px; color: black !important; background: white !important;">
-                    <h2 style="text-align:center; margin-bottom:0;">BRAGANTE AGRO</h2>
-                    <p style="text-align:center; margin-top:5px;">RELATÓRIO: ${modoAtual.toUpperCase()}</p>
-                    <hr>
-                    ${htmlCorpo}
-                    <div style="margin-top:20px; font-size:18px; text-align:right;">
-                        <strong>VALOR TOTAL GERAL: R$ ${totalValor.toFixed(2)}</strong>
-                    </div>
-                </div>`;
+            conteudo += `<hr><h3 style="text-align:right;">TOTAL GERAL: R$ ${totalGeral.toFixed(2)}</h3></div>`;
 
-            // Pequeno atraso para garantir que o navegador "leia" o texto antes de imprimir
+            const container = document.getElementById('print-section');
+            container.innerHTML = conteudo;
+
+            // Força o navegador a renderizar e depois abre a impressão
             setTimeout(() => {
                 window.print();
-            }, 500);
+            }, 300);
         }
 
-        // Funções de Controle (Edição, Status, etc)
-        function prepararEdicao(id) { 
-            const p = todosPedidos.find(x => x.id === id); 
-            document.getElementById('edit-id').value = p.id; 
-            document.getElementById('cliente').value = p.cliente; 
-            document.getElementById('data').value = p.data; 
-            document.getElementById('descricao').value = p.descricao || ""; 
-            document.getElementById('container-produtos').innerHTML = ""; 
-            (p.itens||[]).forEach(i => adicionarLinhaProduto(i.produto, i.qtd, i.preco)); 
-            document.getElementById('btn-cancelar').style.display = 'block'; 
+        function statusEntrega(id) { 
+            const p = todosPedidos.find(x=>x.id===id);
+            db.ref('pedidos/'+id).update({entrega: p.entrega === 'Entregue' ? 'Pendente' : 'Entregue'});
+        }
+        function abrirPgto(id) { pedidoEmPagamento = id; document.getElementById('modalPagamento').style.display = 'flex'; }
+        function fecharModal() { document.getElementById('modalPagamento').style.display = 'none'; }
+        function selecionarForma(f) { 
+            db.ref('pedidos/'+pedidoEmPagamento).update({pagamento:'Pago', formaPg:f}); 
+            fecharModal(); 
+        }
+
+        function mudarModo(m) {
+            modoAtual = m;
+            document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active'));
+            document.getElementById('nav-'+m).classList.add('active');
+            listarPedidos();
+        }
+
+        function cancelarEdicao() {
+            document.getElementById('edit-id').value = "";
+            document.getElementById('container-produtos').innerHTML = "";
+            document.getElementById('btn-cancelar').style.display = "none";
+            adicionarLinhaProduto();
+        }
+
+        function prepararEdicao(id) {
+            const p = todosPedidos.find(x=>x.id===id);
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('cliente').value = p.cliente;
+            document.getElementById('data').value = p.data;
+            document.getElementById('container-produtos').innerHTML = "";
+            p.itens.forEach(i => adicionarLinhaProduto(i.produto, i.qtd, i.preco));
+            document.getElementById('btn-cancelar').style.display = "block";
             window.scrollTo(0,0);
         }
-        
-        function cancelarEdicao() { 
-            document.getElementById('edit-id').value = ""; 
-            document.getElementById('container-produtos').innerHTML = ""; 
-            document.getElementById('descricao').value = "";
-            document.getElementById('btn-cancelar').style.display = 'none';
-            adicionarLinhaProduto(); 
-        }
 
-        function confirmarEntrega(id) { if(confirm("Mudar status da entrega?")) { const p = todosPedidos.find(x=>x.id===id); db.ref('pedidos/'+id).update({entrega: p.entrega === 'Entregue' ? 'Pendente' : 'Entregue'}); } }
-        function gerenciarPgto(id) { pedidoEmPagamento = id; document.getElementById('modalPagamento').style.display = 'flex'; }
-        function fecharModal() { document.getElementById('modalPagamento').style.display = 'none'; }
-        function selecionarForma(f) { db.ref('pedidos/'+pedidoEmPagamento).update({pagamento:'Pago', formaPg:f}); fecharModal(); }
-        
-        function mudarModo(m) { 
-            modoAtual = m; 
-            document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active')); 
-            document.getElementById('nav-' + m).classList.add('active'); 
-            listarPedidos(); 
-        }
-
-        function toggleAccordion() { const p = document.getElementById("filtroPanel"); p.style.display = p.style.display === "block" ? "none" : "block"; }
-        function limparFiltros() { 
-            document.querySelectorAll('#filtroPanel select, #filtroPanel input').forEach(i => i.value = ""); 
-            listarPedidos(); 
-        }
-
-        function atualizarListasMenu() {
-            const sc = document.getElementById('cliente'), fc = document.getElementById('filtro-cliente'), fp = document.getElementById('filtro-produto');
+        function atualizarClientes() {
+            const sel = document.getElementById('cliente');
+            const atual = sel.value;
             const cSet = new Set(); todosPedidos.forEach(p => cSet.add(p.cliente));
-            sc.innerHTML = '<option value="">Selecione...</option><option value="NOVO_CLIENTE">+ NOVO CLIENTE...</option>';
-            [...cSet].sort().forEach(c => { sc.innerHTML += `<option value="${c}">${c}</option>`; });
-            fc.innerHTML = '<option value="">Todos</option>'; [...cSet].sort().forEach(c => { fc.innerHTML += `<option value="${c}">${c}</option>`; });
-            fp.innerHTML = '<option value="">Todos</option>'; listaProdutosBase.forEach(p => { fp.innerHTML += `<option value="${p}">${p}</option>`; });
+            sel.innerHTML = '<option value="">Selecione...</option><option value="NOVO_CLIENTE">+ NOVO CLIENTE...</option>';
+            [...cSet].sort().forEach(c => { sel.innerHTML += `<option value="${c}" ${c===atual?'selected':''}>${c}</option>`; });
+        }
+
+        function verificarNovoCliente(s) {
+            if(s.value === "NOVO_CLIENTE") {
+                const n = prompt("Nome do Cliente:");
+                if(n) {
+                    const o = document.createElement("option"); o.value = n; o.text = n; o.selected = true;
+                    s.add(o);
+                } else s.value = "";
+            }
+        }
+
+        function solicitarPermissaoNotificacao() {
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
         }
 
         document.getElementById('data').valueAsDate = new Date();
