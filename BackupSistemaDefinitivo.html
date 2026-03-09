@@ -93,7 +93,6 @@
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding: 20px; }
         .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center; }
 
-        /* CORREÇÃO PARA IMPRESSÃO NO ANDROID */
         #print-section { display: none; }
         @media print {
             body { background: white !important; }
@@ -199,8 +198,6 @@
     <div id="print-section"></div>
 
     <script>
-        const appStartTime = Date.now();
-
         function solicitarPermissaoNotificacao() {
             if (!("Notification" in window)) return;
             if (Notification.permission === "default") {
@@ -208,8 +205,13 @@
             }
         }
 
+        // REGISTRO DO SERVICE WORKER
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW ativo!', reg))
+                .catch(err => console.log('Erro no SW:', err));
+            });
         }
 
         const firebaseConfig = {
@@ -224,10 +226,9 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // ATIVA O MODO OFFLINE NO FIREBASE
+        // ATIVAÇÃO DO MODO OFFLINE NO FIREBASE
         db.goOnline();
-        // O Firebase Compat não tem persistência automática habilitada em todas as versões sem comando explícito
-        // Mas o .on() manterá o cache local enquanto a aba estiver aberta.
+        db.ref().keepSynced(true); // Garante que os dados fiquem guardados no celular
 
         let listaProdutosBase = [];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
@@ -266,31 +267,6 @@
                     snap.forEach(child => { if(child.val() === p) child.ref.remove(); });
                 });
                 fecharModalExcluir();
-            }
-        }
-
-        function tocarBeep() {
-            try {
-                const context = new (window.AudioContext || window.webkitAudioContext)();
-                const gain = context.createGain();
-                gain.connect(context.destination);
-                gain.gain.setValueAtTime(0, context.currentTime);
-                gain.gain.linearRampToValueAtTime(0.4, context.currentTime + 0.01);
-                const playNote = (freq, start, duration) => {
-                    const osc = context.createOscillator();
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(freq, start);
-                    osc.connect(gain); osc.start(start); osc.stop(start + duration);
-                };
-                playNote(440, context.currentTime, 0.1); 
-                playNote(880, context.currentTime + 0.08, 0.2); 
-            } catch (e) { }
-        }
-
-        function enviarNotificacao(titulo, corpo) {
-            if (Notification.permission === 'granted' && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.ready.then(reg => {
-                    reg.showNotification(titulo, { body: corpo, icon: 'logo.png' });
-                });
             }
         }
 
@@ -390,7 +366,6 @@
             });
         }
 
-        // CORREÇÃO DO RELATÓRIO COM FILTROS E SOMAS
         function gerarRelatorioImpressao() {
             const fC = document.getElementById('filtro-cliente').value;
             const fP = document.getElementById('filtro-produto').value;
@@ -408,12 +383,12 @@
             if(filtrados.length === 0) return alert("Nada para imprimir com os filtros selecionados.");
 
             let totalGeral = 0;
-            let resumoItens = {}; // Para somar quantidades por produto
+            let resumoItens = {};
 
             let html = `
                 <div style="padding:20px; font-family: sans-serif; color: #333;">
                     <h2 style="text-align:center; color:#0a3d1d; margin-bottom:5px;">BRAGANTE AGRO</h2>
-                    <p style="text-align:center; font-size:12px; margin-bottom:20px;">Relatório: ${modoAtual.toUpperCase()} | Filtros Ativos</p>
+                    <p style="text-align:center; font-size:12px; margin-bottom:20px;">Relatório: ${modoAtual.toUpperCase()}</p>
                     <table style="width:100%; border-collapse: collapse; font-size: 12px;">
                         <thead>
                             <tr style="background:#f1f5f9; text-align:left;">
@@ -427,7 +402,6 @@
             filtrados.forEach(p => {
                 totalGeral += p.total;
                 let itensTexto = p.itens.map(i => {
-                    // Soma para o resumo final
                     resumoItens[i.produto] = (resumoItens[i.produto] || 0) + i.qtd;
                     return `${i.qtd}x ${i.produto}`;
                 }).join('<br>');
@@ -443,8 +417,6 @@
             });
 
             html += `</tbody></table>`;
-
-            // Seção de Resumo de Itens
             html += `<div style="margin-top:20px; padding:10px; background:#f8fafc; border-radius:8px;">
                         <h4 style="margin:0 0 10px 0; font-size:14px; color:#0a3d1d;">RESUMO DE QUANTIDADES:</h4>`;
             for(let prod in resumoItens) {
