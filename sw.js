@@ -1,84 +1,43 @@
-const CACHE_NAME = 'bragante-v3'; // Versão atualizada
-const assets = [
+const CACHE_NAME = 'bragante-agro-v4'; // Mudei a versão para forçar atualização
+const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './logo.png',
-  './BackupSistemaDefinitivo.html',
-  './FormularioRacaoDefinitivo.html',
-  // Bibliotecas externas essenciais para o funcionamento offline
   'https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js',
-  'https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js',
-  'https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400;600;700;900&display=swap'
+  'https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js'
 ];
 
-// Instala e salva os arquivos no cache
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(assets))
+// Instalação e armazenamento persistente
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS);
+    })
   );
   self.skipWaiting();
 });
 
-// Ativa e remove caches antigos
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
+// Limpa caches antigos mas mantém o atual vivo
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
     caches.keys().then((keys) => {
-      return Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
+      return Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      );
     })
   );
+  return self.clients.claim();
 });
 
-// Estratégia: Tenta o Cache primeiro (mais rápido para Offline). Se não tiver, busca na Internet.
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => {
-      return response || fetch(e.request);
-    })
-  );
-});
-
-// --- LÓGICA DE NOTIFICAÇÃO ---[cite: 2]
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();[cite: 2]
-
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes('/') && 'focus' in client) {
-          return client.focus();[cite: 2]
-        }
+// Intercepta pedidos: Se estiver offline, entrega o que está no cache imediatamente
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
       }
-      if (clients.openWindow) {
-        return clients.openWindow('./');[cite: 2]
-      }
+      return fetch(event.request);
     })
-  );
-});
-
-self.addEventListener('push', (event) => {
-  let data = { title: 'Bragante Agro', body: 'Nova atualização disponível!' };[cite: 2]
-  if (event.data) {
-    try {
-      data = event.data.json();
-    } catch (e) {
-      data.body = event.data.text();
-    }
-  }
-
-  const options = {
-    body: data.body,[cite: 2]
-    icon: './logo.png',[cite: 2]
-    badge: './logo.png',[cite: 2]
-    vibrate: [200, 100, 200],[cite: 2]
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1
-    }
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)[cite: 2]
   );
 });
