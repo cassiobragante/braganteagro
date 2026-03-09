@@ -7,12 +7,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    
     <link rel="manifest" href="manifest.json">
-    
     <meta name="theme-color" content="#0a3d1d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,6 +15,7 @@
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="icon" type="image/png" href="logo.png">
 
+    <!-- Bibliotecas Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
@@ -97,11 +93,18 @@
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding: 20px; }
         .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center; }
 
+        /* CORREÇÃO PARA IMPRESSÃO NO ANDROID */
         #print-section { display: none; }
         @media print {
-            body * { visibility: hidden; }
-            #print-section, #print-section * { visibility: visible; }
-            #print-section { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background-color: white; }
+            body { background: white !important; }
+            .app-container { display: none !important; }
+            #print-section { 
+                display: block !important; 
+                position: relative !important; 
+                width: 100% !important; 
+                visibility: visible !important;
+            }
+            #print-section * { visibility: visible !important; }
         }
     </style>
 </head>
@@ -172,6 +175,7 @@
         <div id="listaPedidos"></div>
     </div>
 
+    <!-- Modais -->
     <div id="modalPagamento" class="modal">
         <div class="modal-content">
             <div class="section-title">Recebimento</div>
@@ -197,24 +201,15 @@
     <script>
         const appStartTime = Date.now();
 
-        // FUNÇÃO DE SOLICITAÇÃO DE PERMISSÃO
         function solicitarPermissaoNotificacao() {
             if (!("Notification" in window)) return;
             if (Notification.permission === "default") {
-                Notification.requestPermission().then(permission => {
-                    if (permission === "granted") {
-                        console.log("Notificações permitidas!");
-                    }
-                });
+                Notification.requestPermission();
             }
         }
 
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(reg => { 
-                console.log("Service Worker ativo");
-                // Solicita permissão assim que o SW estiver pronto
-                solicitarPermissaoNotificacao();
-            });
+            navigator.serviceWorker.register('sw.js');
         }
 
         const firebaseConfig = {
@@ -228,6 +223,11 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+
+        // ATIVA O MODO OFFLINE NO FIREBASE
+        db.goOnline();
+        // O Firebase Compat não tem persistência automática habilitada em todas as versões sem comando explícito
+        // Mas o .on() manterá o cache local enquanto a aba estiver aberta.
 
         let listaProdutosBase = [];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
@@ -276,29 +276,20 @@
                 gain.connect(context.destination);
                 gain.gain.setValueAtTime(0, context.currentTime);
                 gain.gain.linearRampToValueAtTime(0.4, context.currentTime + 0.01);
-                const playNote = (freq, start, duration, type = 'sine') => {
+                const playNote = (freq, start, duration) => {
                     const osc = context.createOscillator();
-                    osc.type = type; osc.frequency.setValueAtTime(freq, start);
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(freq, start);
                     osc.connect(gain); osc.start(start); osc.stop(start + duration);
                 };
                 playNote(440, context.currentTime, 0.1); 
                 playNote(880, context.currentTime + 0.08, 0.2); 
-                gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.4);
             } catch (e) { }
         }
 
         function enviarNotificacao(titulo, corpo) {
-            if (Notification.permission === 'granted') {
+            if (Notification.permission === 'granted' && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.ready.then(reg => {
-                    reg.showNotification(titulo, { 
-                        body: corpo, 
-                        icon: 'logo.png',
-                        badge: 'logo.png',
-                        vibrate: [200, 100, 200],
-                        tag: 'pedido-' + Date.now(),
-                        renotify: true,
-                        requireInteraction: true
-                    });
+                    reg.showNotification(titulo, { body: corpo, icon: 'logo.png' });
                 });
             }
         }
@@ -340,26 +331,12 @@
             const dados = { data, cliente, itens, total, descricao: obs || "", timestamp: firebase.database.ServerValue.TIMESTAMP };
             
             if(idEdit) {
-                db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => { 
-                    enviarNotificacao("Pedido Editado", `${cliente}: R$ ${total.toFixed(2)}`);
-                    tocarBeep();
-                    cancelarEdicao(); 
-                });
+                db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => { cancelarEdicao(); });
             } else {
                 const nid = db.ref('pedidos').push().key;
-                db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false}).then(() => { 
-                    cancelarEdicao(); 
-                });
+                db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false}).then(() => { cancelarEdicao(); });
             }
         }
-
-        db.ref('pedidos').on('child_added', (snapshot) => {
-            const p = snapshot.val();
-            if (p && p.timestamp && p.timestamp > appStartTime && !p.editado) {
-                tocarBeep();
-                enviarNotificacao("Novo Pedido", `${p.cliente}: R$ ${p.total.toFixed(2)}`);
-            }
-        });
 
         db.ref('pedidos').on('value', (snap) => {
             todosPedidos = []; snap.forEach(c => { todosPedidos.push(c.val()); });
@@ -402,7 +379,6 @@
                     <div class="status-container">
                         <span class="tag ${entOk?'tag-verde':''}">ENTREGA: ${p.entrega}</span>
                         <span class="tag ${pagOk?'tag-verde':''}">PGTO: ${p.pagamento} ${p.formaPg?`(${p.formaPg})`:''}</span>
-                        ${p.editado ? `<span class="tag tag-editado">EDITADO</span>` : ''}
                     </div>
                     <div class="total-row"><span class="total-val">R$ ${p.total.toFixed(2)}</span></div>
                     <div class="actions">
@@ -414,11 +390,13 @@
             });
         }
 
+        // CORREÇÃO DO RELATÓRIO COM FILTROS E SOMAS
         function gerarRelatorioImpressao() {
             const fC = document.getElementById('filtro-cliente').value;
             const fP = document.getElementById('filtro-produto').value;
             const fI = document.getElementById('filtro-inicio').value;
             const fF = document.getElementById('filtro-fim').value;
+
             const filtrados = todosPedidos.filter(p => {
                 let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
                 let pC = fC === "" || p.cliente === fC;
@@ -426,51 +404,88 @@
                 let pD = (!fI || p.data >= fI) && (!fF || p.data <= fF);
                 return pM && pC && pP && pD;
             });
-            if(filtrados.length === 0) return alert("Nenhum pedido nos filtros atuais.");
-            let totalValor = 0, totalQtd = 0, htmlContent = "";
+
+            if(filtrados.length === 0) return alert("Nada para imprimir com os filtros selecionados.");
+
+            let totalGeral = 0;
+            let resumoItens = {}; // Para somar quantidades por produto
+
+            let html = `
+                <div style="padding:20px; font-family: sans-serif; color: #333;">
+                    <h2 style="text-align:center; color:#0a3d1d; margin-bottom:5px;">BRAGANTE AGRO</h2>
+                    <p style="text-align:center; font-size:12px; margin-bottom:20px;">Relatório: ${modoAtual.toUpperCase()} | Filtros Ativos</p>
+                    <table style="width:100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background:#f1f5f9; text-align:left;">
+                                <th style="padding:8px; border-bottom:2px solid #ddd;">Data/Cliente</th>
+                                <th style="padding:8px; border-bottom:2px solid #ddd;">Produtos</th>
+                                <th style="padding:8px; border-bottom:2px solid #ddd; text-align:right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
             filtrados.forEach(p => {
-                const itensFiltrados = (p.itens || []).filter(i => fP === "" || i.produto === fP);
-                if (itensFiltrados.length > 0) {
-                    htmlContent += `<div style="padding: 10px 0; border-bottom: 1px solid #ddd; margin-bottom: 10px;"><div style="font-weight: 700; font-size: 14px;">${p.cliente} - ${p.data.split('-').reverse().join('/')}</div>`;
-                    itensFiltrados.forEach(i => {
-                        const sub = i.qtd * i.preco; totalValor += sub; totalQtd += i.qtd;
-                        htmlContent += `<div style="font-size: 12px; color: #555; margin-left: 10px;">• ${i.qtd}x ${i.produto} - Unit: R$ ${i.preco.toFixed(2)} | Sub: R$ ${sub.toFixed(2)}</div>`;
-                    });
-                    htmlContent += `</div>`;
-                }
+                totalGeral += p.total;
+                let itensTexto = p.itens.map(i => {
+                    // Soma para o resumo final
+                    resumoItens[i.produto] = (resumoItens[i.produto] || 0) + i.qtd;
+                    return `${i.qtd}x ${i.produto}`;
+                }).join('<br>');
+
+                html += `
+                    <tr>
+                        <td style="padding:8px; border-bottom:1px solid #eee;">
+                            <b>${p.data.split('-').reverse().join('/')}</b><br>${p.cliente}
+                        </td>
+                        <td style="padding:8px; border-bottom:1px solid #eee;">${itensTexto}</td>
+                        <td style="padding:8px; border-bottom:1px solid #eee; text-align:right;">R$ ${p.total.toFixed(2)}</td>
+                    </tr>`;
             });
-            const printDiv = document.getElementById('print-section');
-            printDiv.innerHTML = `<div style="padding:30px; font-family:'Inter', sans-serif;"><div style="text-align:center; margin-bottom: 20px;"><h2 style="margin:0; color:#0a3d1d;">BRAGANTE AGRO</h2><p style="margin:5px 0; font-size:12px; font-weight:bold; color:#666; text-transform:uppercase;">Relatório de Pedidos - ${modoAtual}</p><p style="margin:0; font-size:10px; color:#999;">Gerado em: ${new Date().toLocaleString()}</p></div>${htmlContent}<div style="margin-top:20px; background:#f1f5f9; padding:15px; border-radius:8px; border:1px solid #0a3d1d;"><div style="display:flex; justify-content:space-between; font-weight:bold; font-size: 13px;"><span>TOTAL DE ITENS:</span><span>${totalQtd}</span></div><div style="display:flex; justify-content:space-between; font-weight:900; font-size: 16px; color:#0a3d1d; margin-top:5px;"><span>VALOR TOTAL GERAL:</span><span>R$ ${totalValor.toFixed(2)}</span></div></div></div>`;
+
+            html += `</tbody></table>`;
+
+            // Seção de Resumo de Itens
+            html += `<div style="margin-top:20px; padding:10px; background:#f8fafc; border-radius:8px;">
+                        <h4 style="margin:0 0 10px 0; font-size:14px; color:#0a3d1d;">RESUMO DE QUANTIDADES:</h4>`;
+            for(let prod in resumoItens) {
+                html += `<div style="font-size:12px;"><b>${prod}:</b> ${resumoItens[prod]} unidades</div>`;
+            }
+
+            html += `<div style="margin-top:15px; border-top:2px solid #0a3d1d; padding-top:10px; text-align:right;">
+                        <span style="font-size:16px; font-weight:900; color:#0a3d1d;">SOMA TOTAL: R$ ${totalGeral.toFixed(2)}</span>
+                     </div>
+                </div>`;
+
+            const printArea = document.getElementById('print-section');
+            printArea.innerHTML = html;
             window.print();
-            setTimeout(() => { printDiv.innerHTML = ""; }, 1000);
         }
 
         function confirmarEntrega(id) {
             const p = todosPedidos.find(x=>x.id===id);
             if(p.entrega === 'Entregue') {
-                if(confirm("Deseja estornar a entrega para PENDENTE?")) db.ref('pedidos/'+id).update({entrega:'Pendente'});
+                if(confirm("Deseja estornar a entrega?")) db.ref('pedidos/'+id).update({entrega:'Pendente'});
             } else {
-                if(confirm("O pedido foi entregue?")) {
+                if(confirm("Confirmar entrega?")) {
                     db.ref('pedidos/'+id).update({entrega:'Entregue'});
-                    if(p.pagamento === 'Pendente' && confirm("O pedido já foi pago?")) abrirModal(id);
                 }
             }
         }
 
         function gerenciarPgto(id) { 
             const p = todosPedidos.find(x=>x.id===id); 
-            if(p.pagamento==='Pago') { if(confirm("Deseja estornar o pagamento para PENDENTE?")) db.ref('pedidos/'+id).update({pagamento:'Pendente', formaPg:''}); } 
+            if(p.pagamento==='Pago') { if(confirm("Deseja estornar o pagamento?")) db.ref('pedidos/'+id).update({pagamento:'Pendente', formaPg:''}); } 
             else { abrirModal(id); }
         }
 
         function mudarModo(m) { modoAtual = m; document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active')); document.getElementById('nav-' + m).classList.add('active'); listarPedidos(); }
         function cancelarEdicao() { document.getElementById('edit-id').value = ""; document.getElementById('cliente').value = ""; document.getElementById('descricao').value = ""; document.getElementById('container-produtos').innerHTML = ""; adicionarLinhaProduto(); document.getElementById('btn-cancelar').style.display = 'none'; }
         function prepararEdicao(id) { const p = todosPedidos.find(x => x.id === id); document.getElementById('edit-id').value = p.id; document.getElementById('cliente').value = p.cliente; document.getElementById('data').value = p.data; document.getElementById('descricao').value = p.descricao || ""; document.getElementById('container-produtos').innerHTML = ""; (p.itens||[]).forEach(i => adicionarLinhaProduto(i.produto, i.qtd, i.preco)); document.getElementById('btn-cancelar').style.display = 'block'; window.scrollTo({top:0, behavior:'smooth'}); }
-        function excluirPedido(id) { if(confirm("Excluir?")) db.ref('pedidos/'+id).remove(); }
+        function excluirPedido(id) { if(confirm("Excluir definitivamente?")) db.ref('pedidos/'+id).remove(); }
         function abrirModal(id) { pedidoEmPagamento = id; document.getElementById('modalPagamento').style.display='flex'; }
         function fecharModal() { document.getElementById('modalPagamento').style.display='none'; }
         function selecionarForma(f) { db.ref('pedidos/'+pedidoEmPagamento).update({pagamento:'Pago', formaPg:f}); fecharModal(); }
-        function selecionarOutros() { const d = prompt("Qual?"); if (d) selecionarForma(d); }
+        function selecionarOutros() { const d = prompt("Qual a forma de pagamento?"); if (d) selecionarForma(d); }
         function toggleAccordion() { const p = document.getElementById("filtroPanel"); p.style.display = p.style.display === "block" ? "none" : "block"; }
         function limparFiltros() { document.getElementById('filtro-cliente').value = ""; document.getElementById('filtro-produto').value = ""; document.getElementById('filtro-inicio').value = ""; document.getElementById('filtro-fim').value = ""; listarPedidos(); }
 
