@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bragante-v12'; // Versão v12 para limpar o travamento
+const CACHE_NAME = 'bragante-v13'; // Atualizado para v13 para forçar atualização nos celulares
 const assets = [
   './',
   './index.html',
@@ -22,7 +22,7 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
-// Ativação e limpeza total de lixo anterior
+// Ativação e limpeza de versões antigas
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -34,12 +34,20 @@ self.addEventListener('activate', (e) => {
   return self.clients.claim();
 });
 
-// ESTRATÉGIA SEGURA: Tenta rede, se falhar, usa cache
+// ESTRATÉGIA DE REDE COM EXCEÇÃO PARA FIREBASE
 self.addEventListener('fetch', (e) => {
+  // --- INICIO DA ALTERAÇÃO ---
+  // Se a requisição for para o Firebase (banco de dados), o Service Worker NÃO interfere.
+  // Isso permite que o 'setPersistenceEnabled(true)' do Firebase funcione corretamente.
+  if (e.request.url.includes('firebaseio.com') || e.request.url.includes('googleapis')) {
+    return; 
+  }
+  // --- FIM DA ALTERAÇÃO ---
+
   e.respondWith(
     fetch(e.request)
       .then((response) => {
-        // Se a rede funcionar, salva uma cópia no cache
+        // Se a rede funcionar, salva/atualiza o arquivo no cache (HTML, CSS, Imagens)
         if (response && response.status === 200 && e.request.method === 'GET') {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -49,11 +57,11 @@ self.addEventListener('fetch', (e) => {
         return response;
       })
       .catch(() => {
-        // Se a rede falhar (OFFLINE), busca no cache
+        // Se estiver OFFLINE, busca o arquivo no cache
         return caches.match(e.request).then((cachedResponse) => {
           if (cachedResponse) return cachedResponse;
           
-          // Se for uma página e não tiver no cache, manda para o index
+          // Se for navegação e não tiver no cache, redireciona para o index
           if (e.request.mode === 'navigate') {
             return caches.match('./index.html');
           }
@@ -62,7 +70,7 @@ self.addEventListener('fetch', (e) => {
   );
 });
 
-// LÓGICA DE NOTIFICAÇÃO (Mantida)
+// LÓGICA DE NOTIFICAÇÃO
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
