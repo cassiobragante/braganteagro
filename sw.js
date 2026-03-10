@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bragante-v11'; // Atualizado para v11 para limpar estados de erro anteriores
+const CACHE_NAME = 'bragante-v12'; // Versão v12 para limpar o travamento
 const assets = [
   './',
   './index.html',
@@ -12,18 +12,17 @@ const assets = [
   'https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js'
 ];
 
-// Instala e salva os arquivos no cache imediatamente
+// Instalação
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Cacheando ecossistema Bragante...');
       return cache.addAll(assets);
     })
   );
-  self.skipWaiting(); 
+  self.skipWaiting();
 });
 
-// Ativa e assume o controle das páginas instantaneamente
+// Ativação e limpeza total de lixo anterior
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -32,38 +31,38 @@ self.addEventListener('activate', (e) => {
       );
     })
   );
-  return self.clients.claim(); 
+  return self.clients.claim();
 });
 
-// ESTRATÉGIA: Stale-While-Revalidate (Entrega Cache imediato e atualiza em background)
+// ESTRATÉGIA SEGURA: Tenta rede, se falhar, usa cache
 self.addEventListener('fetch', (e) => {
   e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      // Se tiver no cache, entrega imediatamente para o app abrir rápido
-      const fetchPromise = fetch(e.request).then((networkResponse) => {
-        // Se a rede responder, atualiza o cache para a próxima abertura
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
+    fetch(e.request)
+      .then((response) => {
+        // Se a rede funcionar, salva uma cópia no cache
+        if (response && response.status === 200 && e.request.method === 'GET') {
+          const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            if (e.request.method === 'GET') {
-              cache.put(e.request, responseToCache);
-            }
+            cache.put(e.request, responseClone);
           });
         }
-        return networkResponse;
-      }).catch(() => {
-        // Fallback offline: se falhar a rede e for navegação, garante o index
-        if (e.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
-
-      return cachedResponse || fetchPromise;
-    })
+        return response;
+      })
+      .catch(() => {
+        // Se a rede falhar (OFFLINE), busca no cache
+        return caches.match(e.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          
+          // Se for uma página e não tiver no cache, manda para o index
+          if (e.request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+        });
+      })
   );
 });
 
-// --- LÓGICA DE NOTIFICAÇÃO (Mantida conforme original) ---
+// LÓGICA DE NOTIFICAÇÃO (Mantida)
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
@@ -74,19 +73,4 @@ self.addEventListener('notificationclick', (event) => {
       if (clients.openWindow) return clients.openWindow('./');
     })
   );
-});
-
-self.addEventListener('push', (event) => {
-  let data = { title: 'Bragante Agro', body: 'Nova atualização disponível!' };
-  if (event.data) {
-    try { data = event.data.json(); } catch (e) { data.body = event.data.text(); }
-  }
-  const options = {
-    body: data.body,
-    icon: './logo.png',
-    badge: './logo.png',
-    vibrate: [200, 100, 200],
-    data: { dateOfArrival: Date.now(), primaryKey: 1 }
-  };
-  event.waitUntil(self.registration.showNotification(data.title, options));
 });
