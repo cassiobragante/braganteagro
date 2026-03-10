@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bragante-v4'; // Atualizado para forçar o celular a baixar a nova lógica
+const CACHE_NAME = 'bragante-v8'; //
 const assets = [
   './',
   './index.html',
@@ -10,7 +10,7 @@ const assets = [
   'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@400;600;700;900&display=swap',
   'https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js'
-];[cite: 10]
+];[cite: 10, 11]
 
 // Instala e salva os arquivos no cache
 self.addEventListener('install', (e) => {
@@ -23,7 +23,7 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });[cite: 10]
 
-// Ativa e remove caches antigos
+// Ativa e remove caches antigos para evitar conflitos
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -35,19 +35,26 @@ self.addEventListener('activate', (e) => {
   return self.clients.claim();
 });[cite: 10]
 
-// ESTRATÉGIA AJUSTADA: Cache First com fallback para Network
-// Isso garante que o iframe encontre o arquivo localmente antes de dar erro
+// ESTRATÉGIA: Cache First (Prioridade Total ao Cache)
+// Essencial para que os iframes abram offline sem tentar a rede primeiro
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((response) => {
-      // Se estiver no cache, retorna imediatamente (melhor para offline)
-      // Se não estiver, tenta buscar na rede
-      return response || fetch(e.request);
+      // Retorna o cache se existir; se não, busca na rede e tenta salvar no cache
+      return response || fetch(e.request).then((fetchRes) => {
+        return caches.open(CACHE_NAME).then((cache) => {
+          // Apenas salva no cache requisições válidas do próprio domínio
+          if (e.request.url.includes(location.origin)) {
+            cache.put(e.request, fetchRes.clone());
+          }
+          return fetchRes;
+        });
+      });
     })
   );
 });[cite: 10]
 
-// --- LÓGICA DE NOTIFICAÇÃO (Mantida conforme original) ---
+// --- LÓGICA DE NOTIFICAÇÃO ---
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
