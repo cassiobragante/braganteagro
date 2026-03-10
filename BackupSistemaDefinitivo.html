@@ -15,7 +15,7 @@
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="icon" type="image/png" href="logo.png">
 
-    <!-- Bibliotecas Firebase -->
+    <!-- Bibliotecas Firebase Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
@@ -97,13 +97,7 @@
         @media print {
             body { background: white !important; }
             .app-container { display: none !important; }
-            #print-section { 
-                display: block !important; 
-                position: relative !important; 
-                width: 100% !important; 
-                visibility: visible !important;
-            }
-            #print-section * { visibility: visible !important; }
+            #print-section { display: block !important; width: 100% !important; }
         }
     </style>
 </head>
@@ -198,22 +192,6 @@
     <div id="print-section"></div>
 
     <script>
-        function solicitarPermissaoNotificacao() {
-            if (!("Notification" in window)) return;
-            if (Notification.permission === "default") {
-                Notification.requestPermission();
-            }
-        }
-
-        // REGISTRO DO SERVICE WORKER
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('SW ativo!', reg))
-                .catch(err => console.log('Erro no SW:', err));
-            });
-        }
-
         const firebaseConfig = {
             apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
             authDomain: "bragante-agro.firebaseapp.com",
@@ -223,12 +201,12 @@
             messagingSenderId: "445413217691",
             appId: "1:445413217691:web:e9b37451c2689a007e7d3e"
         };
-        firebase.initializeApp(firebaseConfig);
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            firebase.database().ref().keepSynced(true);
+        }
         const db = firebase.database();
-
-        // ATIVAÇÃO DO MODO OFFLINE NO FIREBASE
-        db.goOnline();
-        db.ref().keepSynced(true); // Garante que os dados fiquem guardados no celular
 
         let listaProdutosBase = [];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
@@ -380,7 +358,7 @@
                 return pM && pC && pP && pD;
             });
 
-            if(filtrados.length === 0) return alert("Nada para imprimir com os filtros selecionados.");
+            if(filtrados.length === 0) return alert("Nada para imprimir.");
 
             let totalGeral = 0;
             let resumoItens = {};
@@ -428,8 +406,7 @@
                      </div>
                 </div>`;
 
-            const printArea = document.getElementById('print-section');
-            printArea.innerHTML = html;
+            document.getElementById('print-section').innerHTML = html;
             window.print();
         }
 
@@ -438,28 +415,29 @@
             if(p.entrega === 'Entregue') {
                 if(confirm("Deseja estornar a entrega?")) db.ref('pedidos/'+id).update({entrega:'Pendente'});
             } else {
-                if(confirm("Confirmar entrega?")) {
-                    db.ref('pedidos/'+id).update({entrega:'Entregue'});
-                }
+                if(confirm("Confirmar entrega?")) db.ref('pedidos/'+id).update({entrega:'Entregue'});
             }
         }
 
         function gerenciarPgto(id) { 
             const p = todosPedidos.find(x=>x.id===id); 
             if(p.pagamento==='Pago') { if(confirm("Deseja estornar o pagamento?")) db.ref('pedidos/'+id).update({pagamento:'Pendente', formaPg:''}); } 
-            else { abrirModal(id); }
+            else { pedidoEmPagamento = id; document.getElementById('modalPagamento').style.display='flex'; }
         }
 
         function mudarModo(m) { modoAtual = m; document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active')); document.getElementById('nav-' + m).classList.add('active'); listarPedidos(); }
         function cancelarEdicao() { document.getElementById('edit-id').value = ""; document.getElementById('cliente').value = ""; document.getElementById('descricao').value = ""; document.getElementById('container-produtos').innerHTML = ""; adicionarLinhaProduto(); document.getElementById('btn-cancelar').style.display = 'none'; }
         function prepararEdicao(id) { const p = todosPedidos.find(x => x.id === id); document.getElementById('edit-id').value = p.id; document.getElementById('cliente').value = p.cliente; document.getElementById('data').value = p.data; document.getElementById('descricao').value = p.descricao || ""; document.getElementById('container-produtos').innerHTML = ""; (p.itens||[]).forEach(i => adicionarLinhaProduto(i.produto, i.qtd, i.preco)); document.getElementById('btn-cancelar').style.display = 'block'; window.scrollTo({top:0, behavior:'smooth'}); }
         function excluirPedido(id) { if(confirm("Excluir definitivamente?")) db.ref('pedidos/'+id).remove(); }
-        function abrirModal(id) { pedidoEmPagamento = id; document.getElementById('modalPagamento').style.display='flex'; }
         function fecharModal() { document.getElementById('modalPagamento').style.display='none'; }
         function selecionarForma(f) { db.ref('pedidos/'+pedidoEmPagamento).update({pagamento:'Pago', formaPg:f}); fecharModal(); }
         function selecionarOutros() { const d = prompt("Qual a forma de pagamento?"); if (d) selecionarForma(d); }
         function toggleAccordion() { const p = document.getElementById("filtroPanel"); p.style.display = p.style.display === "block" ? "none" : "block"; }
         function limparFiltros() { document.getElementById('filtro-cliente').value = ""; document.getElementById('filtro-produto').value = ""; document.getElementById('filtro-inicio').value = ""; document.getElementById('filtro-fim').value = ""; listarPedidos(); }
+
+        function solicitarPermissaoNotificacao() {
+            if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+        }
 
         document.getElementById('data').valueAsDate = new Date();
         adicionarLinhaProduto();
