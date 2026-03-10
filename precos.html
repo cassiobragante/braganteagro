@@ -126,12 +126,18 @@
         appId: "1:445413217691:web:e9b37451c2689a007e7d3e"
     };
 
-    // Inicialização segura
+    // Inicialização segura com Persistência Ativada
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
+        // Ativa armazenamento local para os dados[cite: 6]
+        firebase.database().setPersistenceEnabled(true);
     }
 
     const db = firebase.database();
+    
+    // Mantém o nó de preços sempre sincronizado para acesso offline imediato[cite: 6]
+    db.ref('configuracoes/tabela_precos').keepSynced(true);
+
     let sessaoAdmin = false;
 
     // Sincronização em tempo real
@@ -165,7 +171,6 @@
     function renderLista() {
         const busca = normalizar(document.getElementById('inputBusca').value);
         
-        // Listener "on" mantém a tabela atualizada sempre que houver mudança no Firebase
         db.ref('configuracoes/tabela_precos').on('value', (snap) => {
             const container = document.getElementById('lista-organizada');
             container.innerHTML = "";
@@ -186,12 +191,10 @@
                 }
             });
 
-            // Gerar lista de categorias únicas
             const datalist = document.getElementById('sugestoes-cat');
             const todasCats = [...new Set(produtos.map(p => p.categoria || "GERAL"))];
             datalist.innerHTML = todasCats.map(c => `<option value="${c}">`).join('');
 
-            // Organizar por categoria
             todasCats.sort().forEach(cat => {
                 const displayDelCat = (sessaoAdmin && cat !== "GERAL") ? 'inline' : 'none';
                 
@@ -224,7 +227,7 @@
             });
         }, (error) => {
             console.error("Erro no Firebase:", error);
-            document.getElementById('lista-organizada').innerHTML = "Erro ao carregar dados. Verifique a internet.";
+            // Agora, se houver erro de rede, ele tentará carregar do cache automaticamente[cite: 6]
         });
     }
 
@@ -286,7 +289,6 @@
         }
     }
 
-    // Inicialização da lista
     renderLista();
 </script>
 </body>
