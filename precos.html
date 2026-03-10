@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tabela de Preços - Bragante Agro</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Scripts do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
@@ -42,13 +44,14 @@
 
         .btn-plus { 
             position: absolute; right: 0; top: 50%; transform: translateY(-50%);
-            width: 30px; height: 30px; background: var(--verde-escuro); color: white; 
-            border: none; border-radius: 6px; font-size: 18px; cursor: pointer; 
+            width: 35px; height: 35px; background: var(--verde-escuro); color: white; 
+            border: none; border-radius: 6px; font-size: 20px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
         }
 
-        #status-admin { font-size: 9px; font-weight: bold; color: var(--verde-claro); display: none; text-align: center; margin-bottom: 8px; }
+        #status-admin { font-size: 10px; font-weight: bold; color: var(--verde-claro); display: none; text-align: center; margin-bottom: 8px; background: #e8f5e9; padding: 5px; border-radius: 5px; }
 
-        .search-box { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--neutro-borda); margin-bottom: 12px; font-size: 13px; box-sizing: border-box; }
+        .search-box { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--neutro-borda); margin-bottom: 12px; font-size: 14px; box-sizing: border-box; }
 
         .cat-wrapper { display: flex; align-items: center; justify-content: space-between; margin: 15px 0 5px; }
         .categoria-label { font-size: 10px; font-weight: 900; color: var(--verde-claro); background: #e8f5e9; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
@@ -59,15 +62,15 @@
         .item-info b { font-size: 11px; text-transform: uppercase; color: #334155; }
         .item-info span { color: var(--verde-claro); font-weight: 800; font-size: 14px; display: block; }
         
-        .actions { display: none; gap: 10px; }
-        .btn-action { background: none; border: none; cursor: pointer; font-size: 16px; }
+        .actions { display: none; gap: 8px; }
+        .btn-action { background: #f1f5f9; border: 1px solid var(--neutro-borda); cursor: pointer; font-size: 14px; padding: 5px; border-radius: 4px; }
 
-        .admin-section { display: none; background: white; padding: 15px; border: 1px solid var(--verde-claro); border-radius: 10px; margin-top: 15px; }
-        input { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--neutro-borda); box-sizing: border-box; font-size: 14px; }
-        .btn-save { background: var(--verde-escuro); color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .admin-section { display: none; background: white; padding: 15px; border: 2px solid var(--verde-claro); border-radius: 10px; margin-top: 15px; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--neutro-borda); box-sizing: border-box; font-size: 14px; }
+        .btn-save { background: var(--verde-escuro); color: white; width: 100%; padding: 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
 
         .btn-print { 
-            width: 100%; background: #64748b; color: white; padding: 10px; 
+            width: 100%; background: #64748b; color: white; padding: 12px; 
             border: none; border-radius: 8px; margin-top: 10px; cursor: pointer; 
             font-weight: bold; font-size: 11px; text-transform: uppercase;
         }
@@ -83,30 +86,36 @@
         <p style="font-size: 8px; color: #64748b; font-weight: bold; text-transform: uppercase;">Estância São Francisco do Balsamo</p>
     </div>
 
-    <div id="status-admin">MODO EDIÇÃO ATIVO <button onclick="logoutAdmin()" style="color:red; border:none; background:none; cursor:pointer; font-weight:bold;">(SAIR)</button></div>
+    <div id="status-admin">
+        MODO EDIÇÃO ATIVO 
+        <button onclick="logoutAdmin()" style="color:red; border:none; background:none; cursor:pointer; font-weight:bold; margin-left:10px;">[SAIR]</button>
+    </div>
 
     <div class="title-container">
         <div class="form-title">TABELA DE PREÇOS</div>
         <button class="btn-plus" onclick="validarAcesso()">+</button>
     </div>
 
-    <input type="text" id="inputBusca" class="search-box" placeholder="🔎 Buscar..." onkeyup="renderLista()">
+    <input type="text" id="inputBusca" class="search-box" placeholder="🔎 Buscar produto ou categoria..." onkeyup="renderLista()">
 
-    <div id="lista-organizada"></div>
+    <div id="lista-organizada">Carregando produtos...</div>
 
     <button class="btn-print" onclick="window.print()">🖨️ IMPRIMIR / GERAR PDF</button>
 
     <div id="admin-panel" class="admin-section">
+        <h3 style="font-size: 12px; color: var(--verde-escuro); margin-top: 0;">ADICIONAR/EDITAR ITEM</h3>
         <input type="hidden" id="edit-id">
-        <input type="text" id="nome-prod" placeholder="NOME DO PRODUTO">
-        <input type="number" id="preco-prod" placeholder="VALOR R$" step="0.01">
-        <input type="text" id="cat-prod" placeholder="CATEGORIA (SAIS, GRAOS...)" list="sugestoes-cat">
+        <input type="text" id="nome-prod" placeholder="NOME DO PRODUTO (Ex: Milho)">
+        <input type="number" id="preco-prod" placeholder="VALOR R$ (Ex: 55.00)" step="0.01">
+        <input type="text" id="cat-prod" placeholder="CATEGORIA (Ex: GRAOS)" list="sugestoes-cat">
         <datalist id="sugestoes-cat"></datalist>
         <button class="btn-save" id="btn-salvar" onclick="salvarItem()">SALVAR NO SISTEMA</button>
+        <button onclick="document.getElementById('admin-panel').style.display='none'" style="width:100%; background:none; border:none; color:gray; font-size:10px; margin-top:10px; cursor:pointer;">CANCELAR</button>
     </div>
 </div>
 
 <script>
+    // Configuração Firebase (Verificada)
     const firebaseConfig = {
         apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
         authDomain: "bragante-agro.firebaseapp.com",
@@ -116,29 +125,33 @@
         messagingSenderId: "445413217691",
         appId: "1:445413217691:web:e9b37451c2689a007e7d3e"
     };
-    firebase.initializeApp(firebaseConfig);
-    
-    // ATIVAÇÃO DO MODO OFFLINE NO FIREBASE
-    // Permite que os dados lidos anteriormente fiquem salvos no dispositivo
-    firebase.database().enablePersistence().catch((err) => {
-        console.log("Persistência Offline falhou:", err.code);
-    });
+
+    // Inicialização segura
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
 
     const db = firebase.database();
     let sessaoAdmin = false;
 
+    // Sincronização em tempo real
     function normalizar(texto) {
-        return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        return texto ? texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
     }
 
     function validarAcesso() {
-        if(sessaoAdmin) { document.getElementById('admin-panel').style.display = 'block'; return; }
-        const senha = prompt("Senha:");
+        if(sessaoAdmin) { 
+            document.getElementById('admin-panel').style.display = 'block'; 
+            return; 
+        }
+        const senha = prompt("Digite a senha de administrador:");
         if (senha === "1030") {
             sessaoAdmin = true;
             document.getElementById('status-admin').style.display = 'block';
             document.getElementById('admin-panel').style.display = 'block';
             renderLista();
+        } else if (senha !== null) {
+            alert("Senha incorreta!");
         }
     }
 
@@ -151,64 +164,99 @@
 
     function renderLista() {
         const busca = normalizar(document.getElementById('inputBusca').value);
+        
+        // Listener "on" mantém a tabela atualizada sempre que houver mudança no Firebase
         db.ref('configuracoes/tabela_precos').on('value', (snap) => {
             const container = document.getElementById('lista-organizada');
             container.innerHTML = "";
-            if(!snap.exists()) return;
+            
+            if(!snap.exists()) {
+                container.innerHTML = "<p style='text-align:center; font-size:12px; color:gray;'>Nenhum produto cadastrado.</p>";
+                return;
+            }
 
             const produtos = [];
             snap.forEach(s => { 
-                let p = s.val(); p.id = s.key; 
+                let p = s.val(); 
+                p.id = s.key; 
                 const nomeNorm = normalizar(p.nome);
                 const catNorm = normalizar(p.categoria || "");
-                if(nomeNorm.includes(busca) || catNorm.includes(busca)) produtos.push(p);
+                if(nomeNorm.includes(busca) || catNorm.includes(busca)) {
+                    produtos.push(p);
+                }
             });
 
+            // Gerar lista de categorias únicas
             const datalist = document.getElementById('sugestoes-cat');
             const todasCats = [...new Set(produtos.map(p => p.categoria || "GERAL"))];
             datalist.innerHTML = todasCats.map(c => `<option value="${c}">`).join('');
 
+            // Organizar por categoria
             todasCats.sort().forEach(cat => {
                 const displayDelCat = (sessaoAdmin && cat !== "GERAL") ? 'inline' : 'none';
-                container.innerHTML += `
+                
+                let htmlSet = `
                     <div class="cat-wrapper">
                         <span class="categoria-label">${cat}</span>
-                        <button class="btn-del-cat" style="display:${displayDelCat}" onclick="limparCategoria('${cat}')">Remover Nome 🗑️</button>
-                    </div>`;
+                        <button class="btn-del-cat" style="display:${displayDelCat}" onclick="limparCategoria('${cat}')">🗑️ Limpar</button>
+                    </div>
+                    <div class="card">`;
                 
-                let card = `<div class="card">`;
-                produtos.filter(p => (p.categoria || "GERAL") === cat).forEach(p => {
+                const produtosDaCat = produtos.filter(p => (p.categoria || "GERAL") === cat);
+                
+                produtosDaCat.forEach(p => {
                     const displayActions = sessaoAdmin ? 'flex' : 'none';
-                    card += `
+                    htmlSet += `
                         <div class="item-row">
-                            <div class="item-info"><b>${p.nome}</b><span>R$ ${parseFloat(p.preco).toFixed(2)}</span></div>
+                            <div class="item-info">
+                                <b>${p.nome}</b>
+                                <span>R$ ${parseFloat(p.preco).toFixed(2)}</span>
+                            </div>
                             <div class="actions" style="display:${displayActions}">
                                 <button class="btn-action" onclick="editarItem('${p.id}','${p.nome}','${p.preco}','${p.categoria}')">✏️</button>
                                 <button class="btn-action" onclick="removerItem('${p.id}')">❌</button>
                             </div>
                         </div>`;
                 });
-                container.innerHTML += card + `</div>`;
+
+                htmlSet += `</div>`;
+                container.innerHTML += htmlSet;
             });
+        }, (error) => {
+            console.error("Erro no Firebase:", error);
+            document.getElementById('lista-organizada').innerHTML = "Erro ao carregar dados. Verifique a internet.";
         });
     }
 
     function salvarItem() {
         const id = document.getElementById('edit-id').value;
-        const nome = document.getElementById('nome-prod').value.toUpperCase();
+        const nome = document.getElementById('nome-prod').value.trim().toUpperCase();
         const preco = document.getElementById('preco-prod').value;
-        const categoria = document.getElementById('cat-prod').value.toUpperCase() || "GERAL";
+        const categoria = document.getElementById('cat-prod').value.trim().toUpperCase() || "GERAL";
 
         if (nome && preco) {
             const dados = { nome, preco: parseFloat(preco), categoria };
-            if (id) db.ref('configuracoes/tabela_precos/' + id).set(dados);
-            else db.ref('configuracoes/tabela_precos').push(dados);
-            document.getElementById('admin-panel').style.display = 'none';
-            document.getElementById('edit-id').value = "";
-            document.getElementById('nome-prod').value = "";
-            document.getElementById('preco-prod').value = "";
-            document.getElementById('cat-prod').value = "";
+            
+            if (id) {
+                db.ref('configuracoes/tabela_precos/' + id).update(dados)
+                    .then(() => fecharAdmin())
+                    .catch(e => alert("Erro ao atualizar: " + e));
+            } else {
+                db.ref('configuracoes/tabela_precos').push(dados)
+                    .then(() => fecharAdmin())
+                    .catch(e => alert("Erro ao salvar: " + e));
+            }
+        } else {
+            alert("Preencha o Nome e o Preço!");
         }
+    }
+
+    function fecharAdmin() {
+        document.getElementById('admin-panel').style.display = 'none';
+        document.getElementById('edit-id').value = "";
+        document.getElementById('nome-prod').value = "";
+        document.getElementById('preco-prod').value = "";
+        document.getElementById('cat-prod').value = "";
     }
 
     function editarItem(id, n, p, c) {
@@ -216,34 +264,30 @@
         document.getElementById('edit-id').value = id;
         document.getElementById('nome-prod').value = n;
         document.getElementById('preco-prod').value = p;
-        document.getElementById('cat-prod').value = (c !== "undefined" ? c : "");
-        window.scrollTo(0, document.body.scrollHeight);
+        document.getElementById('cat-prod').value = (c !== "undefined" ? c : "GERAL");
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
     function removerItem(id) {
-        if(confirm("Excluir produto?")) db.ref('configuracoes/tabela_precos/' + id).remove();
+        if(confirm("Deseja realmente excluir este produto?")) {
+            db.ref('configuracoes/tabela_precos/' + id).remove();
+        }
     }
 
     function limparCategoria(cat) {
-        if(confirm(`Remover nome da categoria? Os itens irão para GERAL.`)) {
+        if(confirm(`Mover todos os itens da categoria "${cat}" para GERAL?`)) {
             db.ref('configuracoes/tabela_precos').once('value', snap => {
                 snap.forEach(s => {
-                    if(s.val().categoria === cat) db.ref('configuracoes/tabela_precos/' + s.key).update({ categoria: "GERAL" });
+                    if(s.val().categoria === cat) {
+                        db.ref('configuracoes/tabela_precos/' + s.key).update({ categoria: "GERAL" });
+                    }
                 });
             });
         }
     }
 
+    // Inicialização da lista
     renderLista();
-
-    // REGISTRO DO SERVICE WORKER (CARREGAMENTO OFFLINE)
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker registrado!', reg))
-          .catch(err => console.log('Falha ao registrar SW:', err));
-      });
-    }
 </script>
 </body>
 </html>

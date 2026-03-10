@@ -12,6 +12,7 @@
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
 
+    <!-- Firebase (Necessário para sincronização quando houver rede) -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
@@ -59,8 +60,8 @@
     <button id="btn-ir-precos" onclick="abrirPrecos()"><span>💰 TABELA DE PREÇOS</span></button>
     <button id="btn-voltar-pedidos" onclick="fecharTelasExtras()">⬅</button>
 
-    <!-- Sistema Principal -->
-    <iframe id="main-frame" src="BackupSistemaDefinitivo.html"></iframe>
+    <!-- Sistema Principal (Pedidos) -->
+    <iframe id="main-frame" src="./BackupSistemaDefinitivo.html"></iframe>
 
     <!-- Container Ração -->
     <div id="tela-racao" class="tela-extra">
@@ -73,6 +74,7 @@
     </div>
 
     <script>
+        // --- CONFIGURAÇÃO FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
             authDomain: "bragante-agro.firebaseapp.com",
@@ -87,14 +89,25 @@
             firebase.initializeApp(firebaseConfig);
         }
 
+        // --- REGISTRO DO SERVICE WORKER (ESSENCIAL PARA OFFLINE) ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Offline Bragante: Ativado com sucesso!'))
+                    .catch(err => console.log('Erro ao registrar Service Worker:', err));
+            });
+        }
+
+        // --- FUNÇÕES DE NAVEGAÇÃO ---
         function abrirRacao() {
-            document.getElementById('iframe-racao').src = "FormularioRacaoDefinitivo.html";
+            // Usando caminho relativo para garantir que o SW encontre no cache
+            document.getElementById('iframe-racao').src = "./FormularioRacaoDefinitivo.html";
             document.getElementById('tela-racao').style.display = 'block';
             alternarBotoes(false);
         }
 
         function abrirPrecos() {
-            document.getElementById('iframe-precos').src = "precos.html";
+            document.getElementById('iframe-precos').src = "./precos.html";
             document.getElementById('tela-precos').style.display = 'block';
             alternarBotoes(false);
         }
@@ -102,6 +115,7 @@
         function fecharTelasExtras() {
             document.getElementById('tela-racao').style.display = 'none';
             document.getElementById('tela-precos').style.display = 'none';
+            // Limpa o src para economizar memória, mas o cache do SW mantém o arquivo salvo
             document.getElementById('iframe-racao').src = "";
             document.getElementById('iframe-precos').src = "";
             alternarBotoes(true);
