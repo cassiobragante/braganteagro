@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bragante-v9'; // Atualizado para v9 para aplicar a nova lógica de inicialização
+const CACHE_NAME = 'bragante-v10'; // Atualizado para v10 para forçar a nova lógica de persistência
 const assets = [
   './',
   './index.html',
@@ -20,7 +20,7 @@ self.addEventListener('install', (e) => {
       return cache.addAll(assets);
     })
   );
-  self.skipWaiting();
+  self.skipWaiting(); // Força a ativação imediata
 });
 
 // Ativa e assume o controle das páginas instantaneamente
@@ -32,23 +32,35 @@ self.addEventListener('activate', (e) => {
       );
     })
   );
-  return self.clients.claim(); // Força o SW a controlar a página no primeiro carregamento
+  return self.clients.claim(); // Reivindica o controle total sobre o app
 });
 
-// ESTRATÉGIA: Cache-First com Fallback de Navegação
-// Resolve o problema de não carregar após encerrar o app offline
+// ESTRATÉGIA: Prioridade de Navegação Offline (Resolve o erro após encerrar o app)
 self.addEventListener('fetch', (e) => {
+  // Lógica especial para carregamento inicial (Navigation)
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      caches.match('./index.html').then((response) => {
+        // Se o index está no cache, entrega ele primeiro para abrir o app rápido
+        // Enquanto isso, tenta atualizar em segundo plano se houver rede
+        const fetchPromise = fetch(e.request).then((networkResponse) => {
+          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, networkResponse.clone()));
+          return networkResponse;
+        }).catch(() => response); // Se falhar (offline), usa o cache sem erro
+
+        return response || fetchPromise;
+      })
+    );
+    return;
+  }
+
+  // Lógica para demais recursos (imagens, scripts, outros iframes)
   e.respondWith(
     caches.match(e.request).then((response) => {
-      // Se estiver no cache, entrega imediatamente (mesmo sem processo ativo)
-      if (response) {
-        return response;
-      }
+      if (response) return response;
 
-      // Se não estiver no cache, tenta buscar na rede
       return fetch(e.request).then((fetchRes) => {
         return caches.open(CACHE_NAME).then((cache) => {
-          // Salva dinamicamente novos recursos do próprio domínio
           if (e.request.url.includes(location.origin) && e.request.method === 'GET') {
             cache.put(e.request, fetchRes.clone());
           }
@@ -56,27 +68,21 @@ self.addEventListener('fetch', (e) => {
         });
       });
     }).catch(() => {
-      // Caso a rede falhe e não haja cache, se for uma navegação, entrega a home
-      if (e.request.mode === 'navigate') {
-        return caches.match('./index.html');
-      }
+      // Fallback genérico para navegação se tudo falhar
+      if (e.request.mode === 'navigate') return caches.match('./index.html');
     })
   );
 });
 
-// --- LÓGICA DE NOTIFICAÇÃO (Mantida conforme original) ---
+// --- LÓGICA DE NOTIFICAÇÃO (Mantida) ---
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        if (client.url.includes('/') && 'focus' in client) {
-          return client.focus();
-        }
+        if (client.url.includes('/') && 'focus' in client) return client.focus();
       }
-      if (clients.openWindow) {
-        return clients.openWindow('./');
-      }
+      if (clients.openWindow) return clients.openWindow('./');
     })
   );
 });
@@ -84,11 +90,7 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('push', (event) => {
   let data = { title: 'Bragante Agro', body: 'Nova atualização disponível!' };
   if (event.data) {
-    try {
-      data = event.data.json();
-    } catch (e) {
-      data.body = event.data.text();
-    }
+    try { data = event.data.json(); } catch (e) { data.body = event.data.text(); }
   }
   const options = {
     body: data.body,
