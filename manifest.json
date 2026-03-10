@@ -1,20 +1,11 @@
 {
   "name": "Bragante Agro",
   "short_name": "BraganteAgro",
-  "id": "/bragante-agro-pwa",
-  "start_url": "./index.html",
+  "start_url": "index.html",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#f1f5f9",
   "theme_color": "#0a3d1d",
-  "description": "Sistema de Formulação e Pedidos Bragante Agro",
   "icons": [
-    {
-      "src": "logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
     {
       "src": "logo.png",
       "sizes": "512x512",

@@ -49,10 +49,9 @@
         .btn-acesso { background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; padding: 10px; width: 100%; margin-bottom: 12px; max-width: 450px; }
 
         @media print {
-            #btn-liberar-admin, .btn, label, select, #meta-kg, .btn-admin-action, #btn-imprimir { display: none !important; }
-            body { padding: 0; background: white; }
-            .card { border: none; box-shadow: none; max-width: 100%; }
-            .resultado-card { border: 2px solid #000; margin-top: 0; }
+            #btn-liberar-admin, .btn, label, select, #meta-kg, .btn-admin-action { display: none !important; }
+            .card { border: none; box-shadow: none; }
+            .resultado-card { border: 2px solid #000; }
         }
     </style>
 </head>
@@ -102,7 +101,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Configuração conforme[cite: 13]
         const firebaseConfig = {
             apiKey: "AIzaSyCyPiiAtA2vVZpCj0IYR1tf2JlOsmqlg3I",
             authDomain: "braganteracao.firebaseapp.com",
@@ -118,17 +116,11 @@
         const formulasRef = ref(db, 'formulas');
 
         let receitasSalvas = [];
-        const SENHA_MESTRA = "1030";[cite: 13]
+        const SENHA_MESTRA = "1030";
 
-        // Sincronização em tempo real[cite: 13]
         onValue(formulasRef, (snapshot) => {
             const data = snapshot.val();
-            receitasSalvas = [];
-            if (data) {
-                Object.keys(data).forEach(key => {
-                    receitasSalvas.push({ ...data[key], fbKey: key });
-                });
-            }
+            receitasSalvas = data ? Object.keys(data).map(key => ({ ...data[key], fbKey: key })) : [];
             window.atualizarSelects();
         });
 
@@ -151,7 +143,7 @@
         window.addLinhaIngrediente = (nome = '', perc = '') => {
             const div = document.createElement('div');
             div.className = 'grid-ing';
-            div.innerHTML = `<input type="text" class="ing-nome" value="${nome}" placeholder="Ingrediente"><input type="number" class="ing-perc" value="${perc}" placeholder="%" oninput="window.atualizarSoma()"><button class="btn-del" onclick="this.parentElement.remove(); window.atualizarSoma()">×</button>`;
+            div.innerHTML = `<input type="text" class="ing-nome" value="${nome}"><input type="number" class="ing-perc" value="${perc}" oninput="window.atualizarSoma()"><button class="btn-del" onclick="this.parentElement.remove(); window.atualizarSoma()">×</button>`;
             document.getElementById('container-ingredientes').appendChild(div);
             window.atualizarSoma();
         };
@@ -159,34 +151,27 @@
         window.atualizarSoma = () => {
             let soma = 0;
             document.querySelectorAll('.ing-perc').forEach(i => soma += Number(i.value || 0));
-            const badge = document.getElementById('total-porcentagem');
-            badge.innerText = soma + '%';
-            badge.className = soma === 100 ? 'total-badge total-ok' : 'total-badge';
+            document.getElementById('total-porcentagem').innerText = soma + '%';
+            document.getElementById('total-porcentagem').className = soma === 100 ? 'total-badge total-ok' : 'total-badge';
             return soma;
         };
 
         window.salvarReceita = () => {
             const nome = document.getElementById('nome-racao').value;
             const editId = document.getElementById('edit-id').value;
-            if(!nome || window.atualizarSoma() !== 100) return alert("Erro: O nome é obrigatório e a soma deve ser 100%!");
+            if(!nome || window.atualizarSoma() !== 100) return alert("Erro nos dados!");
             
             const ingredientes = [];
-            document.querySelectorAll('.grid-ing').forEach(l => {
-                const n = l.querySelector('.ing-nome').value;
-                const p = Number(l.querySelector('.ing-perc').value);
-                if(n && p) ingredientes.push({ nome: n, porcentagem: p });
-            });
+            document.querySelectorAll('.grid-ing').forEach(l => ingredientes.push({ nome: l.querySelector('.ing-nome').value, porcentagem: Number(l.querySelector('.ing-perc').value) }));
             
-            if(editId) {
-                set(ref(db, 'formulas/' + editId), { nome, ingredientes });
-            } else {
-                push(formulasRef, { nome, ingredientes });
-            }
+            if(editId) set(ref(db, 'formulas/' + editId), { nome, ingredientes });
+            else push(formulasRef, { nome, ingredientes });
             
-            alert("Receita sincronizada com a nuvem!");
+            alert("Sincronizado!");
             window.fecharAdmin();
         };
 
+        // CORREÇÃO: Função para carregar os dados da receita selecionada para edição
         window.carregarParaEditar = () => {
             const key = document.getElementById('select-racao').value;
             if (!key) return alert("Selecione uma ração para editar!");
@@ -205,54 +190,37 @@
 
         window.excluirReceita = () => {
             const key = document.getElementById('select-racao').value;
-            if(key && confirm("Deseja excluir esta receita definitivamente de todos os aparelhos?")) {
-                remove(ref(db, 'formulas/' + key));
-                document.getElementById('resultado-pesagem').innerHTML = "";
-            }
+            if(key && confirm("Excluir de todos os aparelhos?")) remove(ref(db, 'formulas/' + key));
         };
 
         window.atualizarSelects = () => {
             const s = document.getElementById('select-racao');
-            if(!s) return;
             const valorAtual = s.value;
             s.innerHTML = '<option value="">Selecione...</option>';
             receitasSalvas.forEach(r => {
-                const o = document.createElement('option');
-                o.value = r.fbKey;
-                o.textContent = r.nome;
+                const o = new Option(r.nome, r.fbKey);
                 if(r.fbKey === valorAtual) o.selected = true;
-                s.appendChild(o);
+                s.add(o);
             });
         };
 
+        // CORREÇÃO: Agora exibe a percentagem (%) ao lado do nome do ingrediente
         window.calcularMistura = () => {
             const meta = Number(document.getElementById('meta-kg').value);
             const key = document.getElementById('select-racao').value;
             const res = document.getElementById('resultado-pesagem');
             if(!meta || !key) return res.innerHTML = "";
-            
             const r = receitasSalvas.find(x => x.fbKey === key);
-            if(!r) return;
-
-            let h = `<div class="resultado-card">
-                        <div style="text-align:center;font-weight:bold;margin-bottom:10px;color:var(--verde-escuro)">
-                            ${r.nome.toUpperCase()} - TOTAL: ${meta}kg
-                        </div>`;
-            
+            let h = `<div class="resultado-card"><div style="text-align:center;font-weight:bold;margin-bottom:10px;color:var(--verde-escuro)">${r.nome.toUpperCase()} - ${meta}kg</div>`;
             r.ingredientes.forEach(i => {
-                const pesoCalculado = (meta * (i.porcentagem / 100)).toFixed(2);
+                const pesoCalculado = (meta*(i.porcentagem/100)).toFixed(2);
                 h += `<div class="item-pesagem">
                         <span class="item-nome">${i.nome} (${i.porcentagem}%)</span>
                         <b class="item-valor">${pesoCalculado}kg</b>
                       </div>`;
             });
-            
-            res.innerHTML = h + `</div>
-                <button id="btn-imprimir" class="btn btn-main" style="margin-top:10px; background:#64748b;" onclick="window.print()">🖨️ IMPRIMIR FICHA</button>`;
+            res.innerHTML = h + `</div><button class="btn btn-main" style="margin-top:10px; background:#64748b;" onclick="window.print()">🖨️ IMPRIMIR</button>`;
         };
-
-        // Inicialização
-        window.atualizarSelects();
     </script>
 </body>
 </html>

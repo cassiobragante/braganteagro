@@ -15,7 +15,7 @@
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="icon" type="image/png" href="logo.png">
 
-    <!-- Bibliotecas Firebase Compat -->
+    <!-- Bibliotecas Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
@@ -93,11 +93,18 @@
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding: 20px; }
         .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center; }
 
+        /* CORREÇÃO PARA IMPRESSÃO NO ANDROID */
         #print-section { display: none; }
         @media print {
             body { background: white !important; }
             .app-container { display: none !important; }
-            #print-section { display: block !important; width: 100% !important; }
+            #print-section { 
+                display: block !important; 
+                position: relative !important; 
+                width: 100% !important; 
+                visibility: visible !important;
+            }
+            #print-section * { visibility: visible !important; }
         }
     </style>
 </head>
@@ -192,6 +199,19 @@
     <div id="print-section"></div>
 
     <script>
+        const appStartTime = Date.now();
+
+        function solicitarPermissaoNotificacao() {
+            if (!("Notification" in window)) return;
+            if (Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
         const firebaseConfig = {
             apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
             authDomain: "bragante-agro.firebaseapp.com",
@@ -201,12 +221,13 @@
             messagingSenderId: "445413217691",
             appId: "1:445413217691:web:e9b37451c2689a007e7d3e"
         };
-        
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-            firebase.database().ref().keepSynced(true);
-        }
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+
+        // ATIVA O MODO OFFLINE NO FIREBASE
+        db.goOnline();
+        // O Firebase Compat não tem persistência automática habilitada em todas as versões sem comando explícito
+        // Mas o .on() manterá o cache local enquanto a aba estiver aberta.
 
         let listaProdutosBase = [];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
@@ -245,6 +266,31 @@
                     snap.forEach(child => { if(child.val() === p) child.ref.remove(); });
                 });
                 fecharModalExcluir();
+            }
+        }
+
+        function tocarBeep() {
+            try {
+                const context = new (window.AudioContext || window.webkitAudioContext)();
+                const gain = context.createGain();
+                gain.connect(context.destination);
+                gain.gain.setValueAtTime(0, context.currentTime);
+                gain.gain.linearRampToValueAtTime(0.4, context.currentTime + 0.01);
+                const playNote = (freq, start, duration) => {
+                    const osc = context.createOscillator();
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(freq, start);
+                    osc.connect(gain); osc.start(start); osc.stop(start + duration);
+                };
+                playNote(440, context.currentTime, 0.1); 
+                playNote(880, context.currentTime + 0.08, 0.2); 
+            } catch (e) { }
+        }
+
+        function enviarNotificacao(titulo, corpo) {
+            if (Notification.permission === 'granted' && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification(titulo, { body: corpo, icon: 'logo.png' });
+                });
             }
         }
 
@@ -344,6 +390,7 @@
             });
         }
 
+        // CORREÇÃO DO RELATÓRIO COM FILTROS E SOMAS
         function gerarRelatorioImpressao() {
             const fC = document.getElementById('filtro-cliente').value;
             const fP = document.getElementById('filtro-produto').value;
@@ -358,15 +405,15 @@
                 return pM && pC && pP && pD;
             });
 
-            if(filtrados.length === 0) return alert("Nada para imprimir.");
+            if(filtrados.length === 0) return alert("Nada para imprimir com os filtros selecionados.");
 
             let totalGeral = 0;
-            let resumoItens = {};
+            let resumoItens = {}; // Para somar quantidades por produto
 
             let html = `
                 <div style="padding:20px; font-family: sans-serif; color: #333;">
                     <h2 style="text-align:center; color:#0a3d1d; margin-bottom:5px;">BRAGANTE AGRO</h2>
-                    <p style="text-align:center; font-size:12px; margin-bottom:20px;">Relatório: ${modoAtual.toUpperCase()}</p>
+                    <p style="text-align:center; font-size:12px; margin-bottom:20px;">Relatório: ${modoAtual.toUpperCase()} | Filtros Ativos</p>
                     <table style="width:100%; border-collapse: collapse; font-size: 12px;">
                         <thead>
                             <tr style="background:#f1f5f9; text-align:left;">
@@ -380,6 +427,7 @@
             filtrados.forEach(p => {
                 totalGeral += p.total;
                 let itensTexto = p.itens.map(i => {
+                    // Soma para o resumo final
                     resumoItens[i.produto] = (resumoItens[i.produto] || 0) + i.qtd;
                     return `${i.qtd}x ${i.produto}`;
                 }).join('<br>');
@@ -395,6 +443,8 @@
             });
 
             html += `</tbody></table>`;
+
+            // Seção de Resumo de Itens
             html += `<div style="margin-top:20px; padding:10px; background:#f8fafc; border-radius:8px;">
                         <h4 style="margin:0 0 10px 0; font-size:14px; color:#0a3d1d;">RESUMO DE QUANTIDADES:</h4>`;
             for(let prod in resumoItens) {
@@ -406,7 +456,8 @@
                      </div>
                 </div>`;
 
-            document.getElementById('print-section').innerHTML = html;
+            const printArea = document.getElementById('print-section');
+            printArea.innerHTML = html;
             window.print();
         }
 
@@ -415,29 +466,28 @@
             if(p.entrega === 'Entregue') {
                 if(confirm("Deseja estornar a entrega?")) db.ref('pedidos/'+id).update({entrega:'Pendente'});
             } else {
-                if(confirm("Confirmar entrega?")) db.ref('pedidos/'+id).update({entrega:'Entregue'});
+                if(confirm("Confirmar entrega?")) {
+                    db.ref('pedidos/'+id).update({entrega:'Entregue'});
+                }
             }
         }
 
         function gerenciarPgto(id) { 
             const p = todosPedidos.find(x=>x.id===id); 
             if(p.pagamento==='Pago') { if(confirm("Deseja estornar o pagamento?")) db.ref('pedidos/'+id).update({pagamento:'Pendente', formaPg:''}); } 
-            else { pedidoEmPagamento = id; document.getElementById('modalPagamento').style.display='flex'; }
+            else { abrirModal(id); }
         }
 
         function mudarModo(m) { modoAtual = m; document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active')); document.getElementById('nav-' + m).classList.add('active'); listarPedidos(); }
         function cancelarEdicao() { document.getElementById('edit-id').value = ""; document.getElementById('cliente').value = ""; document.getElementById('descricao').value = ""; document.getElementById('container-produtos').innerHTML = ""; adicionarLinhaProduto(); document.getElementById('btn-cancelar').style.display = 'none'; }
         function prepararEdicao(id) { const p = todosPedidos.find(x => x.id === id); document.getElementById('edit-id').value = p.id; document.getElementById('cliente').value = p.cliente; document.getElementById('data').value = p.data; document.getElementById('descricao').value = p.descricao || ""; document.getElementById('container-produtos').innerHTML = ""; (p.itens||[]).forEach(i => adicionarLinhaProduto(i.produto, i.qtd, i.preco)); document.getElementById('btn-cancelar').style.display = 'block'; window.scrollTo({top:0, behavior:'smooth'}); }
         function excluirPedido(id) { if(confirm("Excluir definitivamente?")) db.ref('pedidos/'+id).remove(); }
+        function abrirModal(id) { pedidoEmPagamento = id; document.getElementById('modalPagamento').style.display='flex'; }
         function fecharModal() { document.getElementById('modalPagamento').style.display='none'; }
         function selecionarForma(f) { db.ref('pedidos/'+pedidoEmPagamento).update({pagamento:'Pago', formaPg:f}); fecharModal(); }
         function selecionarOutros() { const d = prompt("Qual a forma de pagamento?"); if (d) selecionarForma(d); }
         function toggleAccordion() { const p = document.getElementById("filtroPanel"); p.style.display = p.style.display === "block" ? "none" : "block"; }
         function limparFiltros() { document.getElementById('filtro-cliente').value = ""; document.getElementById('filtro-produto').value = ""; document.getElementById('filtro-inicio').value = ""; document.getElementById('filtro-fim').value = ""; listarPedidos(); }
-
-        function solicitarPermissaoNotificacao() {
-            if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
-        }
 
         document.getElementById('data').valueAsDate = new Date();
         adicionarLinhaProduto();
