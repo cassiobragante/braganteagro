@@ -12,7 +12,6 @@
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
 
-    <!-- Firebase (Necessário para sincronização quando houver rede) -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
@@ -60,17 +59,14 @@
     <button id="btn-ir-precos" onclick="abrirPrecos()"><span>💰 TABELA DE PREÇOS</span></button>
     <button id="btn-voltar-pedidos" onclick="fecharTelasExtras()">⬅</button>
 
-    <!-- Sistema Principal (Pedidos) -->
     <iframe id="main-frame" src="./BackupSistemaDefinitivo.html"></iframe>
 
-    <!-- Container Ração -->
     <div id="tela-racao" class="tela-extra">
-        <iframe id="iframe-racao" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+        <iframe id="iframe-racao" src="./FormularioRacaoDefinitivo.html" style="width: 100%; height: 100%; border: none;"></iframe>
     </div>
 
-    <!-- Container Preços -->
     <div id="tela-precos" class="tela-extra">
-        <iframe id="iframe-precos" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+        <iframe id="iframe-precos" src="./precos.html" style="width: 100%; height: 100%; border: none;"></iframe>
     </div>
 
     <script>
@@ -93,31 +89,28 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Offline Bragante: Ativado com sucesso!'))
-                    .catch(err => console.log('Erro ao registrar Service Worker:', err));
+                    .then(reg => console.log('Offline Bragante: Ativado!'))
+                    .catch(err => console.log('Erro ao registrar SW:', err));
             });
         }
 
-        // --- FUNÇÕES DE NAVEGAÇÃO ---
+        // --- FUNÇÕES DE NAVEGAÇÃO (AJUSTADAS PARA PERSISTÊNCIA OFFLINE) ---
         function abrirRacao() {
-            // Usando caminho relativo para garantir que o SW encontre no cache
-            document.getElementById('iframe-racao').src = "./FormularioRacaoDefinitivo.html";
+            // Apenas exibe a tela, sem resetar o SRC
             document.getElementById('tela-racao').style.display = 'block';
             alternarBotoes(false);
         }
 
         function abrirPrecos() {
-            document.getElementById('iframe-precos').src = "./precos.html";
+            // Apenas exibe a tela, sem resetar o SRC
             document.getElementById('tela-precos').style.display = 'block';
             alternarBotoes(false);
         }
 
         function fecharTelasExtras() {
+            // Apenas oculta, mantendo o conteúdo "vivo" no cache do navegador
             document.getElementById('tela-racao').style.display = 'none';
             document.getElementById('tela-precos').style.display = 'none';
-            // Limpa o src para economizar memória, mas o cache do SW mantém o arquivo salvo
-            document.getElementById('iframe-racao').src = "";
-            document.getElementById('iframe-precos').src = "";
             alternarBotoes(true);
         }
 
