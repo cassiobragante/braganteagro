@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bragante-v10'; // Atualizado para v10 para forçar a nova lógica de persistência
+const CACHE_NAME = 'bragante-v11'; // Atualizado para v11 para limpar estados de erro anteriores
 const assets = [
   './',
   './index.html',
@@ -20,7 +20,7 @@ self.addEventListener('install', (e) => {
       return cache.addAll(assets);
     })
   );
-  self.skipWaiting(); // Força a ativação imediata
+  self.skipWaiting(); 
 });
 
 // Ativa e assume o controle das páginas instantaneamente
@@ -32,49 +32,38 @@ self.addEventListener('activate', (e) => {
       );
     })
   );
-  return self.clients.claim(); // Reivindica o controle total sobre o app
+  return self.clients.claim(); 
 });
 
-// ESTRATÉGIA: Prioridade de Navegação Offline (Resolve o erro após encerrar o app)
+// ESTRATÉGIA: Stale-While-Revalidate (Entrega Cache imediato e atualiza em background)
 self.addEventListener('fetch', (e) => {
-  // Lógica especial para carregamento inicial (Navigation)
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      caches.match('./index.html').then((response) => {
-        // Se o index está no cache, entrega ele primeiro para abrir o app rápido
-        // Enquanto isso, tenta atualizar em segundo plano se houver rede
-        const fetchPromise = fetch(e.request).then((networkResponse) => {
-          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, networkResponse.clone()));
-          return networkResponse;
-        }).catch(() => response); // Se falhar (offline), usa o cache sem erro
-
-        return response || fetchPromise;
-      })
-    );
-    return;
-  }
-
-  // Lógica para demais recursos (imagens, scripts, outros iframes)
   e.respondWith(
-    caches.match(e.request).then((response) => {
-      if (response) return response;
-
-      return fetch(e.request).then((fetchRes) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          if (e.request.url.includes(location.origin) && e.request.method === 'GET') {
-            cache.put(e.request, fetchRes.clone());
-          }
-          return fetchRes;
-        });
+    caches.match(e.request).then((cachedResponse) => {
+      // Se tiver no cache, entrega imediatamente para o app abrir rápido
+      const fetchPromise = fetch(e.request).then((networkResponse) => {
+        // Se a rede responder, atualiza o cache para a próxima abertura
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            if (e.request.method === 'GET') {
+              cache.put(e.request, responseToCache);
+            }
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        // Fallback offline: se falhar a rede e for navegação, garante o index
+        if (e.request.mode === 'navigate') {
+          return caches.match('./index.html');
+        }
       });
-    }).catch(() => {
-      // Fallback genérico para navegação se tudo falhar
-      if (e.request.mode === 'navigate') return caches.match('./index.html');
+
+      return cachedResponse || fetchPromise;
     })
   );
 });
 
-// --- LÓGICA DE NOTIFICAÇÃO (Mantida) ---
+// --- LÓGICA DE NOTIFICAÇÃO (Mantida conforme original) ---
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
