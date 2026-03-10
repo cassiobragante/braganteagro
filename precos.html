@@ -24,7 +24,6 @@
         .header .bragante { color: var(--verde-escuro); }
         .header .agro { color: var(--verde-claro); }
         
-        /* Título Centralizado com Fonte Menor */
         .title-container { 
             border-top: 1px solid var(--neutro-borda); 
             margin-top: 12px; 
@@ -34,7 +33,7 @@
         }
         .form-title { 
             font-family: 'Montserrat', sans-serif; 
-            font-size: 13px; /* Fonte reduzida */
+            font-size: 13px; 
             color: var(--verde-escuro); 
             font-weight: 800; 
             letter-spacing: 3px; 
@@ -51,7 +50,6 @@
 
         .search-box { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--neutro-borda); margin-bottom: 12px; font-size: 13px; box-sizing: border-box; }
 
-        /* Categorias e Itens */
         .cat-wrapper { display: flex; align-items: center; justify-content: space-between; margin: 15px 0 5px; }
         .categoria-label { font-size: 10px; font-weight: 900; color: var(--verde-claro); background: #e8f5e9; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
         .btn-del-cat { color: var(--vermelho); font-size: 10px; cursor: pointer; display: none; background: none; border: none; font-weight: bold; }
@@ -64,12 +62,10 @@
         .actions { display: none; gap: 10px; }
         .btn-action { background: none; border: none; cursor: pointer; font-size: 16px; }
 
-        /* Painel Admin */
         .admin-section { display: none; background: white; padding: 15px; border: 1px solid var(--verde-claro); border-radius: 10px; margin-top: 15px; }
         input { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--neutro-borda); box-sizing: border-box; font-size: 14px; }
         .btn-save { background: var(--verde-escuro); color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
-        /* Botão Imprimir */
         .btn-print { 
             width: 100%; background: #64748b; color: white; padding: 10px; 
             border: none; border-radius: 8px; margin-top: 10px; cursor: pointer; 
@@ -94,7 +90,7 @@
         <button class="btn-plus" onclick="validarAcesso()">+</button>
     </div>
 
-    <input type="text" id="inputBusca" class="search-box" placeholder="🔎 Buscar (ignora acentos)..." onkeyup="renderLista()">
+    <input type="text" id="inputBusca" class="search-box" placeholder="🔎 Buscar..." onkeyup="renderLista()">
 
     <div id="lista-organizada"></div>
 
@@ -121,11 +117,16 @@
         appId: "1:445413217691:web:e9b37451c2689a007e7d3e"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    
+    // ATIVAÇÃO DO MODO OFFLINE NO FIREBASE
+    // Permite que os dados lidos anteriormente fiquem salvos no dispositivo
+    firebase.database().enablePersistence().catch((err) => {
+        console.log("Persistência Offline falhou:", err.code);
+    });
 
+    const db = firebase.database();
     let sessaoAdmin = false;
 
-    // Função para remover acentos e normalizar texto
     function normalizar(texto) {
         return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
@@ -234,6 +235,15 @@
     }
 
     renderLista();
+
+    // REGISTRO DO SERVICE WORKER (CARREGAMENTO OFFLINE)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registrado!', reg))
+          .catch(err => console.log('Falha ao registrar SW:', err));
+      });
+    }
 </script>
 </body>
 </html>
