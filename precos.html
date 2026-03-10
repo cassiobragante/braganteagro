@@ -3,72 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tabela de Preços - Bragante Agro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <title>Preços - Bragante Agro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Scripts do Firebase -->
+    <!-- Scripts do Firebase (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
     <style>
-        :root { --verde-escuro: #0a3d1d; --verde-claro: #2e7d32; --neutro-bg: #f1f5f9; --neutro-borda: #cbd5e1; --vermelho: #c62828; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--neutro-bg); margin: 0; padding: 10px; }
-        .app-container { width: 100%; max-width: 500px; margin: 0 auto; background: #f8fafc; min-height: 95vh; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; box-sizing: border-box; }
-        .header { text-align: center; margin-bottom: 5px; }
-        .header h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
-        .header .bragante { color: var(--verde-escuro); }
-        .header .agro { color: var(--verde-claro); }
-        .title-container { border-top: 1px solid var(--neutro-borda); margin-top: 12px; padding: 12px 0; text-align: center; position: relative; }
-        .form-title { font-family: 'Montserrat', sans-serif; font-size: 13px; color: var(--verde-escuro); font-weight: 800; letter-spacing: 3px; text-transform: uppercase; }
-        .btn-plus { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 35px; height: 35px; background: var(--verde-escuro); color: white; border: none; border-radius: 6px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        #status-admin { font-size: 10px; font-weight: bold; color: var(--verde-claro); display: none; text-align: center; margin-bottom: 8px; background: #e8f5e9; padding: 5px; border-radius: 5px; }
-        .search-box { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--neutro-borda); margin-bottom: 12px; font-size: 14px; box-sizing: border-box; }
-        .cat-wrapper { display: flex; align-items: center; justify-content: space-between; margin: 15px 0 5px; }
-        .categoria-label { font-size: 10px; font-weight: 900; color: var(--verde-claro); background: #e8f5e9; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
-        .card { background: white; border-radius: 8px; border: 1px solid var(--neutro-borda); overflow: hidden; margin-bottom: 10px; }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid #f1f5f9; }
-        .item-info b { font-size: 11px; text-transform: uppercase; color: #334155; }
-        .item-info span { color: var(--verde-claro); font-weight: 800; font-size: 14px; display: block; }
-        .actions { display: none; gap: 8px; }
-        .btn-action { background: #f1f5f9; border: 1px solid var(--neutro-borda); cursor: pointer; font-size: 14px; padding: 5px; border-radius: 4px; }
-        .admin-section { display: none; background: white; padding: 15px; border: 2px solid var(--verde-claro); border-radius: 10px; margin-top: 15px; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--neutro-borda); box-sizing: border-box; font-size: 14px; }
-        .btn-save { background: var(--verde-escuro); color: white; width: 100%; padding: 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .btn-print { width: 100%; background: #64748b; color: white; padding: 12px; border: none; border-radius: 8px; margin-top: 10px; cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase; }
-        @media print { .btn-plus, .actions, .admin-section, .search-box, .btn-del-cat, #status-admin, .btn-print { display: none !important; } }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; margin: 0; padding: 15px; }
+        .app-container { max-width: 500px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; color: #0a3d1d; border-bottom: 2px solid #2e7d32; margin-bottom: 15px; padding-bottom: 10px; }
+        .search-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; }
+        .categoria-label { display: block; background: #e8f5e9; color: #2e7d32; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; margin-top: 15px; text-transform: uppercase; }
+        .item-row { display: flex; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #f1f5f9; }
+        .item-row b { font-size: 13px; }
+        .item-row span { color: #2e7d32; font-weight: bold; }
+        .btn-plus { width: 40px; height: 40px; background: #0a3d1d; color: white; border: none; border-radius: 50%; font-size: 24px; position: fixed; bottom: 20px; right: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        #admin-panel { display: none; background: #fff; border: 2px solid #2e7d32; padding: 15px; margin-top: 15px; border-radius: 8px; }
+        input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-save { background: #0a3d1d; color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <h1><span class="bragante">BRAGANTE</span> <span class="agro">AGRO</span></h1>
-        <p style="font-size: 8px; color: #64748b; font-weight: bold; text-transform: uppercase;">Estância São Francisco do Balsamo</p>
+        <h2 style="margin:0">BRAGANTE AGRO</h2>
+        <small>TABELA DE PREÇOS</small>
     </div>
 
-    <div id="status-admin">MODO EDIÇÃO ATIVO <button onclick="logoutAdmin()" style="color:red; border:none; background:none; cursor:pointer; font-weight:bold; margin-left:10px;">[SAIR]</button></div>
+    <input type="text" id="inputBusca" class="search-box" placeholder="Buscar produto..." onkeyup="renderLista()">
+    <div id="lista-organizada">Carregando dados...</div>
+</div>
 
-    <div class="title-container">
-        <div class="form-title">TABELA DE PREÇOS</div>
-        <button class="btn-plus" onclick="validarAcesso()">+</button>
-    </div>
+<button class="btn-plus" onclick="validarAcesso()">+</button>
 
-    <input type="text" id="inputBusca" class="search-box" placeholder="🔎 Buscar produto..." onkeyup="renderLista()">
-    <div id="lista-organizada">Carregando produtos...</div>
-    <button class="btn-print" onclick="window.print()">🖨️ IMPRIMIR / PDF</button>
-
-    <div id="admin-panel" class="admin-section">
-        <input type="hidden" id="edit-id">
-        <input type="text" id="nome-prod" placeholder="NOME DO PRODUTO">
-        <input type="number" id="preco-prod" placeholder="VALOR R$" step="0.01">
-        <input type="text" id="cat-prod" placeholder="CATEGORIA" list="sugestoes-cat">
-        <datalist id="sugestoes-cat"></datalist>
-        <button class="btn-save" onclick="salvarItem()">SALVAR</button>
-        <button onclick="document.getElementById('admin-panel').style.display='none'" style="width:100%; background:none; border:none; color:gray; font-size:10px; margin-top:10px;">CANCELAR</button>
-    </div>
+<div id="admin-panel" class="app-container">
+    <h3>Editar Produto</h3>
+    <input type="hidden" id="edit-id">
+    <input type="text" id="nome-prod" placeholder="Nome">
+    <input type="number" id="preco-prod" placeholder="Preço" step="0.01">
+    <input type="text" id="cat-prod" placeholder="Categoria">
+    <button class="btn-save" onclick="salvarItem()">SALVAR</button>
+    <button onclick="fecharAdmin()" style="width:100%; margin-top:5px; background:none; border:none; color:gray;">Cancelar</button>
 </div>
 
 <script>
+    // Configuração Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
         authDomain: "bragante-agro.firebaseapp.com",
@@ -79,81 +61,68 @@
         appId: "1:445413217691:web:e9b37451c2689a007e7d3e"
     };
 
-    // Inicialização robusta
-    firebase.initializeApp(firebaseConfig);
+    // 1. Inicializa o App Primeiro
+    const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Tenta ativar persistência, se falhar (ex: aba aberta), o app abre mesmo assim
-    db.app.database().setPersistenceEnabled(true).catch(() => console.log("Persistência em espera"));
+    // 2. Tenta persistência de forma isolada (Não trava se der erro)
+    firebase.database().setPersistenceEnabled(true).catch(e => console.log("Offline bypass: ", e.message));
 
+    let dadosCache = [];
     let sessaoAdmin = false;
-    let cacheDados = [];
 
-    function normalizar(texto) { return texto ? texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : ""; }
-
+    // Função de Busca e Renderização
     function renderLista() {
-        const busca = normalizar(document.getElementById('inputBusca').value);
+        const busca = document.getElementById('inputBusca').value.toLowerCase();
         const container = document.getElementById('lista-organizada');
         container.innerHTML = "";
 
-        const categorias = [...new Set(cacheDados.map(p => p.categoria || "GERAL"))].sort();
+        // Pega categorias únicas
+        const categorias = [...new Set(dadosCache.map(p => p.categoria || "GERAL"))].sort();
 
         categorias.forEach(cat => {
-            const produtosDaCat = cacheDados.filter(p => (p.categoria || "GERAL") === cat && (normalizar(p.nome).includes(busca) || normalizar(cat).includes(busca)));
-            
-            if(produtosDaCat.length > 0) {
-                let html = `<div class="cat-wrapper"><span class="categoria-label">${cat}</span></div><div class="card">`;
-                produtosDaCat.forEach(p => {
-                    html += `
-                        <div class="item-row">
-                            <div class="item-info"><b>${p.nome}</b><span>R$ ${parseFloat(p.preco).toFixed(2)}</span></div>
-                            <div class="actions" style="display:${sessaoAdmin ? 'flex' : 'none'}">
-                                <button class="btn-action" onclick="editarItem('${p.id}','${p.nome}','${p.preco}','${p.categoria}')">✏️</button>
-                                <button class="btn-action" onclick="removerItem('${p.id}')">❌</button>
-                            </div>
+            const produtos = dadosCache.filter(p => 
+                (p.categoria || "GERAL") === cat && 
+                (p.nome.toLowerCase().includes(busca) || cat.toLowerCase().includes(busca))
+            );
+
+            if (produtos.length > 0) {
+                container.innerHTML += `<span class="categoria-label">${cat}</span>`;
+                produtos.forEach(p => {
+                    container.innerHTML += `
+                        <div class="item-row" onclick="editarRapido('${p.id}','${p.nome}','${p.preco}','${p.categoria}')">
+                            <b>${p.nome}</b>
+                            <span>R$ ${parseFloat(p.preco).toFixed(2)}</span>
                         </div>`;
                 });
-                html += `</div>`;
-                container.innerHTML += html;
             }
         });
     }
 
-    // Escuta os dados (Funciona Offline se o Firebase já tiver baixado uma vez)
+    // Escuta do Firebase (Funciona Offline com o cache do SDK)
     db.ref('configuracoes/tabela_precos').on('value', (snap) => {
-        cacheDados = [];
-        snap.forEach(s => { 
-            let p = s.val(); 
-            p.id = s.key; 
-            cacheDados.push(p); 
+        dadosCache = [];
+        snap.forEach(s => {
+            let item = s.val();
+            item.id = s.key;
+            dadosCache.push(item);
         });
         renderLista();
+    }, (erro) => {
+        document.getElementById('lista-organizada').innerHTML = "Erro ao carregar dados.";
     });
 
+    // Funções Admin
     function validarAcesso() {
-        if(sessaoAdmin) { document.getElementById('admin-panel').style.display = 'block'; return; }
-        if (prompt("Senha:") === "1030") {
+        if(sessaoAdmin) { document.getElementById('admin-panel').style.display='block'; return; }
+        if(prompt("Senha:") === "1030") {
             sessaoAdmin = true;
-            document.getElementById('status-admin').style.display = 'block';
-            renderLista();
+            alert("Modo admin ativo. Clique nos produtos para editar.");
         }
     }
 
-    function logoutAdmin() { sessaoAdmin = false; document.getElementById('status-admin').style.display = 'none'; renderLista(); }
-
-    function salvarItem() {
-        const id = document.getElementById('edit-id').value;
-        const dados = {
-            nome: document.getElementById('nome-prod').value.trim().toUpperCase(),
-            preco: parseFloat(document.getElementById('preco-prod').value),
-            categoria: document.getElementById('cat-prod').value.trim().toUpperCase() || "GERAL"
-        };
-        if (id) db.ref('configuracoes/tabela_precos/' + id).update(dados);
-        else db.ref('configuracoes/tabela_precos').push(dados);
-        document.getElementById('admin-panel').style.display = 'none';
-    }
-
-    function editarItem(id, n, p, c) {
+    function editarRapido(id, n, p, c) {
+        if(!sessaoAdmin) return;
         document.getElementById('admin-panel').style.display = 'block';
         document.getElementById('edit-id').value = id;
         document.getElementById('nome-prod').value = n;
@@ -161,7 +130,20 @@
         document.getElementById('cat-prod').value = c;
     }
 
-    function removerItem(id) { if(confirm("Excluir?")) db.ref('configuracoes/tabela_precos/' + id).remove(); }
+    function salvarItem() {
+        const id = document.getElementById('edit-id').value;
+        const novo = {
+            nome: document.getElementById('nome-prod').value.toUpperCase(),
+            preco: parseFloat(document.getElementById('preco-prod').value),
+            categoria: document.getElementById('cat-prod').value.toUpperCase() || "GERAL"
+        };
+        if(id) db.ref('configuracoes/tabela_precos/'+id).update(novo);
+        else db.ref('configuracoes/tabela_precos').push(novo);
+        fecharAdmin();
+    }
+
+    function fecharAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
 </script>
+
 </body>
 </html>
