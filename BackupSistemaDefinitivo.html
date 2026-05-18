@@ -53,7 +53,79 @@
         
         .manage-wrapper { text-align: right; }
         .btn-manage-list { width: 22px; height: 22px; border-radius: 4px; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; color: white; border: none; cursor: pointer; background: var(--verde-claro); }
-        .label-manage">EDITAR PRODUTOS</span>
+        .label-manage { font-size: 7px; color: var(--verde-claro); font-weight: bold; display: block; margin-top: 2px; text-align: right; }
+
+        .form-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; }
+        .col-data { flex: 0 0 125px; }
+        .col-cliente { flex: 1; }
+        label { display: block; font-size: 10px; font-weight: 600; color: #64748b; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--neutro-borda); font-size: 14px; outline: none; box-sizing: border-box; background: white; }
+        #descricao { text-transform: capitalize; }
+        .grid-prod { display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 8px; margin-bottom: 8px; align-items: center; }
+        button { cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 11px; text-transform: uppercase; border: none; }
+        .btn-main { background: var(--verde-escuro); color: white; padding: 14px; width: 100%; margin-top: 10px; font-size: 13px; }
+        .btn-secondary { background: #cbd5e1; color: #1e293b; padding: 12px; width: 100%; margin-top: 8px; font-size: 12px; }
+        .btn-add { background: transparent; color: var(--verde-claro); border: 1px dashed var(--verde-claro); padding: 9px; margin-bottom: 12px; width: 100%; }
+        .btn-nav-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 10px; }
+        .btn-nav { background: #64748b; color: white; padding: 12px 5px; font-size: 8.5px; line-height: 1.2; }
+        .btn-nav.active { background: var(--verde-escuro); border: 2px solid var(--verde-claro); }
+        .btn-report { background: #94a3b8; color: white; padding: 12px; margin-bottom: 20px; width: 100%; }
+        .accordion { background: #f1f5f9; color: var(--texto-principal); padding: 10px; width: 100%; text-align: left; border: 1px solid var(--neutro-borda); border-radius: 6px; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .panel { display: none; background: white; padding: 15px; border: 1px solid var(--neutro-borda); border-top: none; border-radius: 0 0 6px 6px; margin-bottom: 15px; }
+        .pedido-item { background: white; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--neutro-borda); position: relative; border-left-width: 6px; border-left-style: solid; }
+        .status-container { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+        .tag { font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #e2e8f0; color: #64748b; }
+        .tag-verde { background: #dcfce7; color: #166534; }
+        .tag-editado { background: #fee2e2; color: #991b1b; }
+        .btn-del { position: absolute; top: 10px; right: 10px; color: #cbd5e1; font-size: 16px; background: none; width: auto; }
+        .btn-remove-item { color: var(--vermelho-alerta); background: none; font-size: 18px; padding: 0; font-weight: bold; }
+        .total-row { display: flex; justify-content: space-between; border-top: 1px solid #f1f5f9; margin-top: 12px; padding-top: 10px; }
+        .total-val { font-weight: 700; color: var(--verde-escuro); font-size: 15px; }
+        .actions { display: flex; gap: 6px; margin-top: 12px; }
+        .btn-mini { flex: 1; padding: 10px; font-size: 10px; background: #f8fafc; border: 1px solid var(--neutro-borda); color: #475569; }
+        
+        .btn-active-delivery { background: var(--verde-claro) !important; color: white !important; border-color: var(--verde-claro) !important; }
+        .btn-active-pay { background: #1e40af !important; color: white !important; border-color: #1e40af !important; }
+        
+        .badge-novo { background: #f59e0b; color: white; font-size: 8px; padding: 2px 6px; border-radius: 10px; position: absolute; top: 10px; right: 40px; animation: pulse 2s infinite; font-weight: 900; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding: 20px; }
+        .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center; }
+
+        /* CORREÇÃO PARA IMPRESSÃO NO ANDROID */
+        #print-section { display: none; }
+        @media print {
+            body { background: white !important; }
+            .app-container { display: none !important; }
+            #print-section { 
+                display: block !important; 
+                position: relative !important; 
+                width: 100% !important; 
+                visibility: visible !important;
+            }
+            #print-section * { visibility: visible !important; }
+        }
+    </style>
+</head>
+<body onclick="solicitarPermissaoNotificacao()">
+
+    <div class="app-container">
+        <div class="header">
+            <h1><span class="bragante">BRAGANTE</span> <span class="agro">AGRO</span></h1>
+            <p>Estância São Francisco do Balsamo</p>
+            <div class="form-title">PEDIDOS</div>
+        </div>
+
+        <div class="card">
+            <div class="section-title">
+                FORMULÁRIO DE PEDIDO 
+                <div class="manage-wrapper">
+                    <div>
+                        <button class="btn-manage-list" onclick="gerenciarListaProdutos('add')">+</button>
+                        <button class="btn-manage-list" onclick="abrirModalExcluirProd()">-</button>
+                    </div>
+                    <span class="label-manage">EDITAR PRODUTOS</span>
                 </div>
             </div>
             <div class="form-row">
@@ -74,7 +146,9 @@
             <label>Observação Geral</label>
             <textarea id="descricao" rows="2" placeholder="Observações..."></textarea>
             <input type="hidden" id="edit-id">
-            <button class="btn-main" onclick="salvarPedido()">SALVAR PEDIDO</button>
+            
+            <button id="btn-salvar" class="btn-main" onclick="salvarPedido()">SALVAR PEDIDO</button>
+            <button id="btn-novo-pedido" class="btn-secondary" onclick="novoPedidoFluxo()">NOVO PEDIDO</button>
             <button id="btn-cancelar" onclick="cancelarEdicao()" style="display:none; background:#f1f5f9; color:#64748b; margin-top:8px; width:100%; padding:10px;">CANCELAR EDIÇÃO</button>
         </div>
 
@@ -151,7 +225,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Correção de lentidão: Força sincronização ativa em background
         db.goOnline();
         db.ref('configuracoes/produtos').keepSynced(true);
         db.ref('pedidos').keepSynced(true);
@@ -238,11 +311,15 @@
         function removerLinha(id) { if(document.getElementById(`linha-${id}`)) document.getElementById(`linha-${id}`).remove(); }
 
         function salvarPedido() {
+            const btnSalvar = document.getElementById('btn-salvar');
+            if(btnSalvar.disabled) return; // Trava cliques subsequentes enquanto salva
+
             const idEdit = document.getElementById('edit-id').value;
             const cliente = document.getElementById('cliente').value;
             const data = document.getElementById('data').value;
             let obs = document.getElementById('descricao').value;
             if(!cliente || !data || cliente === "NOVO_CLIENTE") return alert("Preencha cliente e data");
+            
             let itens = [], total = 0;
             document.querySelectorAll('.grid-prod').forEach(l => {
                 const idNum = l.id.split('-')[1];
@@ -255,17 +332,57 @@
                 }
             });
             if(itens.length === 0) return alert("Adicione um item");
+            
+            // Desabilita interface imediatamente para evitar duplicados
+            btnSalvar.disabled = true;
+            btnSalvar.innerText = "SALVANDO...";
+
             const dados = { data, cliente, itens, total, descricao: obs || "", timestamp: firebase.database.ServerValue.TIMESTAMP };
             
             if(idEdit) {
-                db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => { cancelarEdicao(); });
+                db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => { 
+                    alert("Alterações salvas com sucesso!");
+                    cancelarEdicao();
+                    restaurarBotaoSalvar();
+                }).catch(err => {
+                    alert("Erro ao salvar!");
+                    restaurarBotaoSalvar();
+                });
             } else {
                 const nid = db.ref('pedidos').push().key;
-                db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false}).then(() => { cancelarEdicao(); });
+                db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false}).then(() => { 
+                    alert("Pedido gravado com sucesso!");
+                    limparFormularioAposSalvar();
+                    restaurarBotaoSalvar();
+                }).catch(err => {
+                    alert("Erro ao enviar pedido!");
+                    restaurarBotaoSalvar();
+                });
             }
         }
 
-        // Otimização crucial: Escuta as atualizações de forma mais leve e sem re-renderizar o select ativo
+        function restaurarBotaoSalvar() {
+            const btnSalvar = document.getElementById('btn-salvar');
+            btnSalvar.disabled = false;
+            btnSalvar.innerText = "SALVAR PEDIDO";
+        }
+
+        function limparFormularioAposSalvar() {
+            // Mantém a data mas limpa os campos de cliente e itens para prevenir reenvio acidental
+            document.getElementById('edit-id').value = "";
+            document.getElementById('cliente').value = "";
+            document.getElementById('descricao').value = "";
+            document.getElementById('container-produtos').innerHTML = "";
+            adicionarLinhaProduto();
+            document.getElementById('btn-cancelar').style.display = 'none';
+        }
+
+        function novoPedidoFluxo() {
+            // Limpa o formulário por completo e foca no primeiro campo disponível (cliente)
+            cancelarEdicao();
+            document.getElementById('cliente').focus();
+        }
+
         db.ref('pedidos').on('value', (snap) => {
             todosPedidos = []; 
             if(snap.exists()) {
@@ -286,7 +403,6 @@
             todosPedidos.forEach(p => { if(p.cliente) cSet.add(p.cliente); });
             const clientesOrdenados = [...cSet].sort();
 
-            // Atualiza select do formulário principal preservando seleção atual
             sc.innerHTML = '<option value="">Selecione...</option><option value="NOVO_CLIENTE">+ NOVO CLIENTE...</option>';
             clientesOrdenados.forEach(c => { 
                 const o = document.createElement('option'); 
@@ -295,7 +411,6 @@
                 sc.add(o); 
             });
             
-            // Atualiza Filtros preservando seleção atual
             fc.innerHTML = '<option value="">Todos</option>' + clientesOrdenados.map(c => `<option value="${c}" ${c===fCVal?'selected':''}>${c}</option>`).join('');
             fp.innerHTML = '<option value="">Todos</option>' + listaProdutosBase.map(p => `<option value="${p}" ${p===fPVal?'selected':''}>${p}</option>`).join('');
         }
@@ -305,7 +420,6 @@
             const fC = document.getElementById('filtro-cliente').value, fP = document.getElementById('filtro-produto').value, fI = document.getElementById('filtro-inicio').value, fF = document.getElementById('filtro-fim').value;
             const agora = Date.now();
             
-            // Armazena em string para injetar no DOM de uma só vez (Evita gargalo de processamento)
             let htmlBuffer = "";
             
             const filtrados = todosPedidos.filter(p => {
