@@ -15,7 +15,6 @@
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="icon" type="image/png" href="logo.png">
 
-    <!-- Bibliotecas Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
@@ -54,78 +53,7 @@
         
         .manage-wrapper { text-align: right; }
         .btn-manage-list { width: 22px; height: 22px; border-radius: 4px; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; color: white; border: none; cursor: pointer; background: var(--verde-claro); }
-        .label-manage { font-size: 7px; color: var(--verde-claro); font-weight: bold; display: block; margin-top: 2px; text-align: right; }
-
-        .form-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; }
-        .col-data { flex: 0 0 125px; }
-        .col-cliente { flex: 1; }
-        label { display: block; font-size: 10px; font-weight: 600; color: #64748b; margin-bottom: 5px; }
-        input, select, textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--neutro-borda); font-size: 14px; outline: none; box-sizing: border-box; background: white; }
-        #descricao { text-transform: capitalize; }
-        .grid-prod { display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 8px; margin-bottom: 8px; align-items: center; }
-        button { cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 11px; text-transform: uppercase; border: none; }
-        .btn-main { background: var(--verde-escuro); color: white; padding: 14px; width: 100%; margin-top: 10px; font-size: 13px; }
-        .btn-add { background: transparent; color: var(--verde-claro); border: 1px dashed var(--verde-claro); padding: 9px; margin-bottom: 12px; width: 100%; }
-        .btn-nav-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 10px; }
-        .btn-nav { background: #64748b; color: white; padding: 12px 5px; font-size: 8.5px; line-height: 1.2; }
-        .btn-nav.active { background: var(--verde-escuro); border: 2px solid var(--verde-claro); }
-        .btn-report { background: #94a3b8; color: white; padding: 12px; margin-bottom: 20px; width: 100%; }
-        .accordion { background: #f1f5f9; color: var(--texto-principal); padding: 10px; width: 100%; text-align: left; border: 1px solid var(--neutro-borda); border-radius: 6px; margin-bottom: 5px; display: flex; justify-content: space-between; }
-        .panel { display: none; background: white; padding: 15px; border: 1px solid var(--neutro-borda); border-top: none; border-radius: 0 0 6px 6px; margin-bottom: 15px; }
-        .pedido-item { background: white; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--neutro-borda); position: relative; border-left-width: 6px; border-left-style: solid; }
-        .status-container { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
-        .tag { font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; background: #e2e8f0; color: #64748b; }
-        .tag-verde { background: #dcfce7; color: #166534; }
-        .tag-editado { background: #fee2e2; color: #991b1b; }
-        .btn-del { position: absolute; top: 10px; right: 10px; color: #cbd5e1; font-size: 16px; background: none; width: auto; }
-        .btn-remove-item { color: var(--vermelho-alerta); background: none; font-size: 18px; padding: 0; font-weight: bold; }
-        .total-row { display: flex; justify-content: space-between; border-top: 1px solid #f1f5f9; margin-top: 12px; padding-top: 10px; }
-        .total-val { font-weight: 700; color: var(--verde-escuro); font-size: 15px; }
-        .actions { display: flex; gap: 6px; margin-top: 12px; }
-        .btn-mini { flex: 1; padding: 10px; font-size: 10px; background: #f8fafc; border: 1px solid var(--neutro-borda); color: #475569; }
-        
-        .btn-active-delivery { background: var(--verde-claro) !important; color: white !important; border-color: var(--verde-claro) !important; }
-        .btn-active-pay { background: #1e40af !important; color: white !important; border-color: #1e40af !important; }
-        
-        .badge-novo { background: #f59e0b; color: white; font-size: 8px; padding: 2px 6px; border-radius: 10px; position: absolute; top: 10px; right: 40px; animation: pulse 2s infinite; font-weight: 900; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding: 20px; }
-        .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center; }
-
-        /* CORREÇÃO PARA IMPRESSÃO NO ANDROID */
-        #print-section { display: none; }
-        @media print {
-            body { background: white !important; }
-            .app-container { display: none !important; }
-            #print-section { 
-                display: block !important; 
-                position: relative !important; 
-                width: 100% !important; 
-                visibility: visible !important;
-            }
-            #print-section * { visibility: visible !important; }
-        }
-    </style>
-</head>
-<body onclick="solicitarPermissaoNotificacao()">
-
-    <div class="app-container">
-        <div class="header">
-            <h1><span class="bragante">BRAGANTE</span> <span class="agro">AGRO</span></h1>
-            <p>Estância São Francisco do Balsamo</p>
-            <div class="form-title">PEDIDOS</div>
-        </div>
-
-        <div class="card">
-            <div class="section-title">
-                NOVO PEDIDO 
-                <div class="manage-wrapper">
-                    <div>
-                        <button class="btn-manage-list" onclick="gerenciarListaProdutos('add')">+</button>
-                        <button class="btn-manage-list" onclick="abrirModalExcluirProd()">-</button>
-                    </div>
-                    <span class="label-manage">EDITAR PRODUTOS</span>
+        .label-manage">EDITAR PRODUTOS</span>
                 </div>
             </div>
             <div class="form-row">
@@ -175,7 +103,6 @@
         <div id="listaPedidos"></div>
     </div>
 
-    <!-- Modais -->
     <div id="modalPagamento" class="modal">
         <div class="modal-content">
             <div class="section-title">Recebimento</div>
@@ -224,10 +151,10 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // ATIVA O MODO OFFLINE NO FIREBASE
+        // Correção de lentidão: Força sincronização ativa em background
         db.goOnline();
-        // O Firebase Compat não tem persistência automática habilitada em todas as versões sem comando explícito
-        // Mas o .on() manterá o cache local enquanto a aba estiver aberta.
+        db.ref('configuracoes/produtos').keepSynced(true);
+        db.ref('pedidos').keepSynced(true);
 
         let listaProdutosBase = [];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
@@ -338,26 +265,49 @@
             }
         }
 
+        // Otimização crucial: Escuta as atualizações de forma mais leve e sem re-renderizar o select ativo
         db.ref('pedidos').on('value', (snap) => {
-            todosPedidos = []; snap.forEach(c => { todosPedidos.push(c.val()); });
+            todosPedidos = []; 
+            if(snap.exists()) {
+                snap.forEach(c => { todosPedidos.push(c.val()); });
+            }
             todosPedidos.sort((a,b) => b.timestamp - a.timestamp);
-            atualizarListasMenu(); listarPedidos();
+            atualizarListasMenu(); 
+            listarPedidos();
         });
 
         function atualizarListasMenu() {
-            const sc = document.getElementById('cliente'), fc = document.getElementById('filtro-cliente'), fp = document.getElementById('filtro-produto'), val = sc.value;
-            const cSet = new Set(); todosPedidos.forEach(p => { if(p.cliente) cSet.add(p.cliente); });
+            const sc = document.getElementById('cliente'), fc = document.getElementById('filtro-cliente'), fp = document.getElementById('filtro-produto');
+            const val = sc.value;
+            const fCVal = fc.value;
+            const fPVal = fp.value;
+            
+            const cSet = new Set(); 
+            todosPedidos.forEach(p => { if(p.cliente) cSet.add(p.cliente); });
+            const clientesOrdenados = [...cSet].sort();
+
+            // Atualiza select do formulário principal preservando seleção atual
             sc.innerHTML = '<option value="">Selecione...</option><option value="NOVO_CLIENTE">+ NOVO CLIENTE...</option>';
-            [...cSet].sort().forEach(c => { const o = document.createElement('option'); o.value = c; o.text = c; if(c === val) o.selected = true; sc.add(o); });
-            fc.innerHTML = '<option value="">Todos</option>'; [...cSet].sort().forEach(c => { fc.innerHTML += `<option value="${c}">${c}</option>`; });
-            fp.innerHTML = '<option value="">Todos</option>'; listaProdutosBase.forEach(p => { fp.innerHTML += `<option value="${p}">${p}</option>`; });
+            clientesOrdenados.forEach(c => { 
+                const o = document.createElement('option'); 
+                o.value = c; o.text = c; 
+                if(c === val) o.selected = true; 
+                sc.add(o); 
+            });
+            
+            // Atualiza Filtros preservando seleção atual
+            fc.innerHTML = '<option value="">Todos</option>' + clientesOrdenados.map(c => `<option value="${c}" ${c===fCVal?'selected':''}>${c}</option>`).join('');
+            fp.innerHTML = '<option value="">Todos</option>' + listaProdutosBase.map(p => `<option value="${p}" ${p===fPVal?'selected':''}>${p}</option>`).join('');
         }
 
         function listarPedidos() {
             const lista = document.getElementById('listaPedidos');
             const fC = document.getElementById('filtro-cliente').value, fP = document.getElementById('filtro-produto').value, fI = document.getElementById('filtro-inicio').value, fF = document.getElementById('filtro-fim').value;
             const agora = Date.now();
-            lista.innerHTML = "";
+            
+            // Armazena em string para injetar no DOM de uma só vez (Evita gargalo de processamento)
+            let htmlBuffer = "";
+            
             const filtrados = todosPedidos.filter(p => {
                 let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
                 let pC = fC === "" || p.cliente === fC;
@@ -365,11 +315,15 @@
                 let pD = (!fI || p.data >= fI) && (!fF || p.data <= fF);
                 return pM && pC && pP && pD;
             });
+
+            document.getElementById('titulo-lista').innerText = modoAtual === 'entregas' ? 'Entregas Pendentes' : (modoAtual === 'pagamentos' ? 'Pagamentos Pendentes' : 'Todos Pedidos');
+
             filtrados.forEach(p => {
                 let entOk = p.entrega === 'Entregue'; let pagOk = p.pagamento === 'Pago';
                 let isNovo = (agora - p.timestamp < 86400000) && p.entrega === 'Pendente' && p.pagamento === 'Pendente';
                 let cor = entOk ? (pagOk ? "var(--verde-claro)" : "var(--vermelho-alerta)") : "var(--cinza-pendente)";
-                lista.innerHTML += `<div class="pedido-item" style="border-left-color: ${cor}">
+                
+                htmlBuffer += `<div class="pedido-item" style="border-left-color: ${cor}">
                     ${isNovo ? '<span class="badge-novo">NOVO</span>' : ''}
                     <button class="btn-del" onclick="excluirPedido('${p.id}')">✕</button>
                     <div style="font-size:10px; color:#94a3b8;">${p.data.split('-').reverse().join('/')}</div>
@@ -388,9 +342,10 @@
                     </div>
                 </div>`;
             });
+            
+            lista.innerHTML = htmlBuffer;
         }
 
-        // CORREÇÃO DO RELATÓRIO COM FILTROS E SOMAS
         function gerarRelatorioImpressao() {
             const fC = document.getElementById('filtro-cliente').value;
             const fP = document.getElementById('filtro-produto').value;
@@ -408,7 +363,7 @@
             if(filtrados.length === 0) return alert("Nada para imprimir com os filtros selecionados.");
 
             let totalGeral = 0;
-            let resumoItens = {}; // Para somar quantidades por produto
+            let resumoItens = {};
 
             let html = `
                 <div style="padding:20px; font-family: sans-serif; color: #333;">
@@ -427,7 +382,6 @@
             filtrados.forEach(p => {
                 totalGeral += p.total;
                 let itensTexto = p.itens.map(i => {
-                    // Soma para o resumo final
                     resumoItens[i.produto] = (resumoItens[i.produto] || 0) + i.qtd;
                     return `${i.qtd}x ${i.produto}`;
                 }).join('<br>');
@@ -444,7 +398,6 @@
 
             html += `</tbody></table>`;
 
-            // Seção de Resumo de Itens
             html += `<div style="margin-top:20px; padding:10px; background:#f8fafc; border-radius:8px;">
                         <h4 style="margin:0 0 10px 0; font-size:14px; color:#0a3d1d;">RESUMO DE QUANTIDADES:</h4>`;
             for(let prod in resumoItens) {
