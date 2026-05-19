@@ -14,55 +14,90 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bragante Agro</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0a3d1d">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
-
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f1f5f9; font-family: sans-serif; }
-        iframe { width: 100%; height: 100%; border: none; display: block; }
-
-        /* Botão Voltar */
-        #btn-voltar-pedidos {
-            display: none; position: fixed; top: 20px; left: 15px;
-            z-index: 100000; background: #0a3d1d; color: #ffffff;
-            width: 45px; height: 45px; border-radius: 8px; border: none;
-            font-weight: bold; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            cursor: pointer; align-items: center; justify-content: center;
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0a3d1d;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .tela-extra { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99998; background: white; }
+        .container-principal {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            background: #f8fafc;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* Telas flutuantes integradas offline */
+        .tela-sistema-extra {
+            display: none;
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            background: white;
+        }
+
+        /* Botão Flutuante Superior Esquerdo - Voltar para Pedidos */
+        #btn-voltar-pedidos {
+            display: none;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+            background: #c62828;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
 
-    <button id="btn-voltar-pedidos" onclick="fecharTelasExtras()">⬅</button>
+    <div class="container-principal">
+        
+        <button id="btn-voltar-pedidos" onclick="fecharTelasExtras()">← Voltar aos Pedidos</button>
 
-    <iframe id="main-frame" src="./BackupSistemaDefinitivo.html"></iframe>
+        <iframe src="BackupSistemaDefinitivo.html" id="iframe-pedidos"></iframe>
 
-    <div id="tela-racao" class="tela-extra">
-        <iframe id="iframe-racao" src="./FormularioRacaoDefinitivo.html" style="width: 100%; height: 100%; border: none;"></iframe>
-    </div>
+        <div id="tela-racao" class="tela-sistema-extra">
+            <iframe src="FormularioRacaoDefinitivo.html"></iframe>
+        </div>
 
-    <div id="tela-precos" class="tela-extra">
-        <iframe id="iframe-precos" src="./precos.html" style="width: 100%; height: 100%; border: none;"></iframe>
+        <div id="tela-precos" class="tela-sistema-extra">
+            <iframe src="precos.html"></iframe>
+        </div>
+
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO FIREBASE ---
+        // Configuração Firebase (Apenas para manter a estrutura se necessário)
         const firebaseConfig = {
             apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
             authDomain: "bragante-agro.firebaseapp.com",
@@ -72,12 +107,9 @@
             messagingSenderId: "445413217691",
             appId: "1:445413217691:web:e9b37451c2689a007e7d3e"
         };
-        
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        firebase.initializeApp(firebaseConfig);
 
-        // --- REGISTRO DO SERVICE WORKER (ESSENCIAL PARA OFFLINE) ---
+        // Registro de Service Worker para Persistência Offline Absoluta
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
@@ -86,7 +118,7 @@
             });
         }
 
-        // --- FUNÇÕES DE NAVEGAÇÃO (AJUSTADAS PARA PERSISTÊNCIA OFFLINE) ---
+        // --- FUNÇÕES DE NAVEGAÇÃO ---
         function abrirRacao() {
             document.getElementById('tela-racao').style.display = 'block';
             alternarBotoes(false);
@@ -107,115 +139,15 @@
             const displayBack = mostrar ? 'none' : 'flex';
             document.getElementById('btn-voltar-pedidos').style.display = displayBack;
         }
-    </script>
-</body>
-</html>
-    <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f1f5f9; font-family: sans-serif; }
-        iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* Botão Formular Ração (Verde) */
-        #btn-ir-racao {
-            position: fixed; right: 0; top: 35%; transform: translateY(-50%);
-            background: #2e7d32; color: white; padding: 25px 8px;
-            border-radius: 15px 0 0 15px; cursor: pointer; z-index: 99999;
-            writing-mode: vertical-rl; text-orientation: mixed;
-            text-transform: uppercase; font-size: 11px; font-weight: bold;
-            border: none; box-shadow: -4px 0 12px rgba(0,0,0,0.2);
-            display: flex; align-items: center;
-        }
-
-        /* Botão Tabela de Preços (Azul) */
-        #btn-ir-precos {
-            position: fixed; right: 0; top: 65%; transform: translateY(-50%);
-            background: #1e40af; color: white; padding: 25px 8px;
-            border-radius: 15px 0 0 15px; cursor: pointer; z-index: 99999;
-            writing-mode: vertical-rl; text-orientation: mixed;
-            text-transform: uppercase; font-size: 11px; font-weight: bold;
-            border: none; box-shadow: -4px 0 12px rgba(0,0,0,0.2);
-            display: flex; align-items: center;
-        }
-
-        /* Botão Voltar */
-        #btn-voltar-pedidos {
-            display: none; position: fixed; top: 20px; left: 15px;
-            z-index: 100000; background: #0a3d1d; color: #ffffff;
-            width: 45px; height: 45px; border-radius: 8px; border: none;
-            font-weight: bold; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            cursor: pointer; align-items: center; justify-content: center;
-        }
-
-        .tela-extra { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99998; background: white; }
-    </style>
-</head>
-<body>
-
-    <button id="btn-ir-racao" onclick="abrirRacao()"><span>🌽 FORMULAR RAÇÃO</span></button>
-    <button id="btn-ir-precos" onclick="abrirPrecos()"><span>💰 TABELA DE PREÇOS</span></button>
-    <button id="btn-voltar-pedidos" onclick="fecharTelasExtras()">⬅</button>
-
-    <iframe id="main-frame" src="./BackupSistemaDefinitivo.html"></iframe>
-
-    <div id="tela-racao" class="tela-extra">
-        <iframe id="iframe-racao" src="./FormularioRacaoDefinitivo.html" style="width: 100%; height: 100%; border: none;"></iframe>
-    </div>
-
-    <div id="tela-precos" class="tela-extra">
-        <iframe id="iframe-precos" src="./precos.html" style="width: 100%; height: 100%; border: none;"></iframe>
-    </div>
-
-    <script>
-        // --- CONFIGURAÇÃO FIREBASE ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
-            authDomain: "bragante-agro.firebaseapp.com",
-            databaseURL: "https://bragante-agro-default-rtdb.firebaseio.com",
-            projectId: "bragante-agro",
-            storageBucket: "bragante-agro.firebasestorage.app",
-            messagingSenderId: "445413217691",
-            appId: "1:445413217691:web:e9b37451c2689a007e7d3e"
-        };
-        
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-
-        // --- REGISTRO DO SERVICE WORKER (ESSENCIAL PARA OFFLINE) ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Offline Bragante: Ativado!'))
-                    .catch(err => console.log('Erro ao registrar SW:', err));
-            });
-        }
-
-        // --- FUNÇÕES DE NAVEGAÇÃO (AJUSTADAS PARA PERSISTÊNCIA OFFLINE) ---
-        function abrirRacao() {
-            // Apenas exibe a tela, sem resetar o SRC
-            document.getElementById('tela-racao').style.display = 'block';
-            alternarBotoes(false);
-        }
-
-        function abrirPrecos() {
-            // Apenas exibe a tela, sem resetar o SRC
-            document.getElementById('tela-precos').style.display = 'block';
-            alternarBotoes(false);
-        }
-
-        function fecharTelasExtras() {
-            // Apenas oculta, mantendo o conteúdo "vivo" no cache do navegador
-            document.getElementById('tela-racao').style.display = 'none';
-            document.getElementById('tela-precos').style.display = 'none';
-            alternarBotoes(true);
-        }
-
-        function alternarBotoes(mostrar) {
-            const displaySide = mostrar ? 'flex' : 'none';
-            const displayBack = mostrar ? 'none' : 'flex';
-            document.getElementById('btn-ir-racao').style.display = displaySide;
-            document.getElementById('btn-ir-precos').style.display = displaySide;
-            document.getElementById('btn-voltar-pedidos').style.display = displayBack;
-        }
+        // Ouvinte de mensagens para comunicação nativa com o iframe de Pedidos
+        window.addEventListener('message', function(event) {
+            if (event.data === 'abrirJanelaRacao') {
+                abrirRacao();
+            } else if (event.data === 'abrirJanelaPrecos') {
+                abrirPrecos();
+            }
+        });
     </script>
 </body>
 </html>
