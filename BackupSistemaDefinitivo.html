@@ -302,8 +302,27 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('SW registrado com sucesso para escuta em background'))
+                .then(reg => {
+                    console.log('SW registrado com sucesso para escuta em background');
+                    reg.addEventListener('updatefound', () => {
+                        const novoWorker = reg.installing;
+                        novoWorker.addEventListener('statechange', () => {
+                            if (novoWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('Nova versão detectada! Atualizando sistema...');
+                                window.location.reload();
+                            }
+                        });
+                    });
+                })
                 .catch(err => console.log('Erro ao registrar SW:', err));
+            });
+
+            let reiniciando = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!reiniciando) {
+                    reiniciando = true;
+                    window.location.reload();
+                }
             });
         }
 
@@ -596,7 +615,7 @@
                     <h3 style="text-align:center; color:#0a3d1d; margin-bottom:5px;">BRAGANTE AGRO</h3>
                     <p style="text-align:center; font-size:11px; margin-top:0; margin-bottom:15px;">Estância São Francisco do Balsamo</p>
                     <div style="border-bottom: 2px solid #0a3d1d; padding-bottom: 5px; margin-bottom: 15px;">
-                        <b>RELATÓRIO DE PEDIDO INDIVIDUAL</b>
+                        <b>Relatório Detalhado do Pedido</b>
                     </div>
                     <table style="width:100%; border-collapse: collapse; font-size: 11px; margin-bottom: 15px;">
                         <thead>
