@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bragante Agro</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght=800&family=Inter:wght=400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0a3d1d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <link rel="apple-touch-icon" href="logo.png">
+    <link class="apple-touch-icon" href="logo.png">
     <link rel="icon" type="image/png" href="logo.png">
 
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
@@ -64,7 +64,6 @@
         .grid-prod { display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 8px; margin-bottom: 8px; align-items: center; }
         button { cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 11px; text-transform: uppercase; border: none; }
         .btn-main { background: var(--verde-escuro); color: white; padding: 14px; width: 100%; margin-top: 10px; font-size: 13px; }
-        .btn-secondary { background: #cbd5e1; color: #1e293b; padding: 12px; width: 100%; margin-top: 8px; font-size: 12px; }
         .btn-add { background: transparent; color: var(--verde-claro); border: 1px dashed var(--verde-claro); padding: 9px; margin-bottom: 12px; width: 100%; }
         .btn-nav-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 10px; }
         .btn-nav { background: #64748b; color: white; padding: 12px 5px; font-size: 8.5px; line-height: 1.2; }
@@ -82,7 +81,7 @@
         .total-row { display: flex; justify-content: space-between; border-top: 1px solid #f1f5f9; margin-top: 12px; padding-top: 10px; }
         .total-val { font-weight: 700; color: var(--verde-escuro); font-size: 15px; }
         .actions { display: flex; gap: 6px; margin-top: 12px; position: relative; z-index: 10; }
-        .btn-mini { flex: 1; padding: 10px; font-size: 10px; background: #f8fafc; border: 1px solid var(--neutro-borda); color: #475569; }
+        .btn-mini { flex: 1; padding: 10px; font-size: 10px; background: #f8fafc; border: 1px solid var(--neutro-borda); color: #475569; z-index: 12; }
         
         .btn-active-delivery { background: var(--verde-claro) !important; color: white !important; border-color: var(--verde-claro) !important; }
         .btn-active-pay { background: #1e40af !important; color: white !important; border-color: #1e40af !important; }
@@ -93,15 +92,13 @@
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding: 20px; }
         .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width: 320px; text-align: center; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
 
-        /* Estilos da Janela de Detalhes */
-        .detalhe-titulo { font-size: 16px; font-weight: 900; color: var(--verde-escuro); margin-bottom: 5px; text-transform: uppercase; }
-        .detalhe-sub { font-size: 11px; color: #64748b; margin-bottom: 15px; font-weight: 600; }
-        .detalhe-info-box { text-align: left; background: #f8fafc; border: 1px solid var(--neutro-borda); padding: 12px; border-radius: 8px; margin-bottom: 15px; }
-        .detalhe-linha { font-size: 12px; margin-bottom: 6px; color: #334155; }
-        .detalhe-tabela { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+        /* Estilos Internos para Visualização de Detalhes */
+        .detalhe-linha { font-size: 12px; text-align: left; margin-bottom: 6px; color: #334155; }
+        .detalhe-tabela { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
         .detalhe-tabela th { background: #e2e8f0; padding: 6px; font-weight: 700; text-align: left; }
-        .detalhe-tabela td { padding: 6px; border-bottom: 1px solid #e2e8f0; }
+        .detalhe-tabela td { padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: left; }
 
+        /* CORREÇÃO PARA IMPRESSÃO NO ANDROID */
         #print-section { display: none; }
         @media print {
             body { background: white !important; color: black !important; }
@@ -113,7 +110,7 @@
                 visibility: visible !important;
             }
             #print-section * { visibility: visible !important; }
-            .page-break { page-break-after: always; }
+            .quebra-pagina { page-break-after: always; }
         }
     </style>
 </head>
@@ -128,7 +125,7 @@
 
         <div class="card">
             <div class="section-title">
-                FORMULÁRIO DE PEDIDO 
+                NOVO PEDIDO 
                 <div class="manage-wrapper">
                     <div>
                         <button class="btn-manage-list" onclick="gerenciarListaProdutos('add')">+</button>
@@ -155,9 +152,7 @@
             <label>Observação Geral</label>
             <textarea id="descricao" rows="2" placeholder="Observações..."></textarea>
             <input type="hidden" id="edit-id">
-            
-            <button id="btn-salvar" class="btn-main" onclick="salvarPedido()">SALVAR PEDIDO</button>
-            <button id="btn-novo-pedido" class="btn-secondary" onclick="novoPedidoFluxo()">NOVO PEDIDO</button>
+            <button class="btn-main" onclick="salvarPedido()">SALVAR PEDIDO</button>
             <button id="btn-cancelar" onclick="cancelarEdicao()" style="display:none; background:#f1f5f9; color:#64748b; margin-top:8px; width:100%; padding:10px;">CANCELAR EDIÇÃO</button>
         </div>
 
@@ -171,13 +166,13 @@
                 <div><label>Início</label><input type="date" id="filtro-inicio" onchange="listarPedidos()"></div>
                 <div><label>Fim</label><input type="date" id="filtro-fim" onchange="listarPedidos()"></div>
             </div>
-            <div id="wrapper-periodo-todos" style="display:none; margin-bottom:10px;">
-                <label>Período (Aba Todos)</label>
-                <select id="filtro-periodo-todos" onchange="listarPedidos()">
-                    <option value="1">Apenas Último Mês</option>
+            <div id="box-periodo-todos" style="display:none; margin-bottom:5px;">
+                <label>Período (Exibição Aba Todos)</label>
+                <select id="filtro-meses" onchange="listarPedidos()">
+                    <option value="1" selected>Último Mês</option>
                     <option value="2">Últimos 2 Meses</option>
                     <option value="3">Últimos 3 Meses</option>
-                    <option value="todos">Todos do Sistema</option>
+                    <option value="todos">Todos</option>
                 </select>
             </div>
             <button onclick="limparFiltros()" style="margin-top:10px; background:none; color:var(--vermelho-alerta); width:100%; font-size:9px">LIMPAR FILTROS</button>
@@ -201,7 +196,7 @@
             <button onclick="selecionarForma('Pix')" class="btn-main" style="background:#14b8a6; margin-bottom: 8px;">PIX</button>
             <button onclick="selecionarForma('Dinheiro')" class="btn-main" style="background:#22c55e; margin-bottom: 8px;">DINHEIRO</button>
             <button onclick="selecionarOutros()" class="btn-main" style="background:#64748b; margin-bottom: 8px;">OUTROS</button>
-            <button onclick="fecharModal()" style="background:none; color:#94a3b8; width:100%; margin-top:15px">VOLTAR</button>
+            <button onclick="fecharModal()" style="background:none; color:#94a3b8; width:100%; margin-top:15px">FECHAR</button>
         </div>
     </div>
 
@@ -216,15 +211,14 @@
     </div>
 
     <div id="modalDetalhes" class="modal">
-        <div class="modal-content" style="max-width: 420px;">
-            <div class="detalhe-titulo">Detalhes do Pedido</div>
-            <div class="detalhe-sub">Bragante Agro</div>
-            <div id="detalhes-conteudo"></div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
-                <button id="btn-detalhe-editar" class="btn-main" style="margin:0;">EDITAR</button>
-                <button id="btn-detalhe-imprimir" class="btn-main" style="background:#475569; margin:0;">IMPRIMIR</button>
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="section-title" style="font-size:14px;">DETALHES DO PEDIDO</div>
+            <div id="conteudo-detalhes"></div>
+            <div style="display:flex; gap:8px; margin-top:15px;">
+                <button id="btn-detalhe-editar" class="btn-main" style="margin:0; background:#64748b;">EDITAR</button>
+                <button id="btn-detalhe-imprimir" class="btn-main" style="margin:0; background:var(--verde-claro);">IMPRIMIR</button>
             </div>
-            <button onclick="fecharModalDetalhes()" style="background:none; color:#94a3b8; width:100%; margin-top:15px; font-weight:700;">FECHAR</button>
+            <button onclick="fecharModalDetalhes()" style="background:none; color:#94a3b8; width:100%; margin-top:15px; font-weight:bold;">FECHAR</button>
         </div>
     </div>
 
@@ -232,7 +226,7 @@
 
     <script>
         const appStartTime = Date.now();
-        let escutaIniciada = false;
+        let escutaNotificacoesAtiva = false;
 
         function solicitarPermissaoNotificacao() {
             if (!("Notification" in window)) return;
@@ -258,8 +252,6 @@
         const db = firebase.database();
 
         db.goOnline();
-        db.ref('configuracoes/produtos').keepSynced(true);
-        db.ref('pedidos').keepSynced(true);
 
         let listaProdutosBase = [];
         let contadorProdutos = 0, todosPedidos = [], modoAtual = 'entregas', pedidoEmPagamento = null;
@@ -343,15 +335,11 @@
         function removerLinha(id) { if(document.getElementById(`linha-${id}`)) document.getElementById(`linha-${id}`).remove(); }
 
         function salvarPedido() {
-            const btnSalvar = document.getElementById('btn-salvar');
-            if(btnSalvar.disabled) return;
-
             const idEdit = document.getElementById('edit-id').value;
             const cliente = document.getElementById('cliente').value;
             const data = document.getElementById('data').value;
             let obs = document.getElementById('descricao').value;
             if(!cliente || !data || cliente === "NOVO_CLIENTE") return alert("Preencha cliente e data");
-            
             let itens = [], total = 0;
             document.querySelectorAll('.grid-prod').forEach(l => {
                 const idNum = l.id.split('-')[1];
@@ -364,42 +352,20 @@
                 }
             });
             if(itens.length === 0) return alert("Adicione um item");
-            
-            btnSalvar.disabled = true;
-            btnSalvar.innerText = "SALVANDO...";
-
             const dados = { data, cliente, itens, total, descricao: obs || "", timestamp: firebase.database.ServerValue.TIMESTAMP };
             
             if(idEdit) {
                 db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => { 
-                    alert("Pedido alterado e salvo com sucesso!");
-                    cancelarEdicao();
-                    restaurarBotaoSalvar();
-                }).catch(err => {
-                    alert("Erro ao salvar!");
-                    restaurarBotaoSalvar();
+                    alert("Pedido alterado e salvo!");
+                    cancelarEdicao(); 
                 });
             } else {
                 const nid = db.ref('pedidos').push().key;
                 db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false}).then(() => { 
                     alert("Pedido salvo com sucesso!");
-                    cancelarEdicao();
-                    restaurarBotaoSalvar();
-                }).catch(err => {
-                    alert("Erro ao enviar pedido!");
-                    restaurarBotaoSalvar();
+                    cancelarEdicao(); 
                 });
             }
-        }
-
-        function restaurarBotaoSalvar() {
-            const btnSalvar = document.getElementById('btn-salvar');
-            btnSalvar.disabled = false;
-            btnSalvar.innerText = "SALVAR PEDIDO";
-        }
-
-        function novoPedidoFluxo() {
-            cancelarEdicao();
         }
 
         db.ref('pedidos').on('value', (snap) => {
@@ -411,14 +377,14 @@
             atualizarListasMenu(); 
             listarPedidos();
 
-            // Ativa o ouvinte de novos registros após a primeira carga completa
-            if(!escutaIniciada) {
-                escutaIniciada = true;
+            // Configura escuta global multidisciplinar de novos pedidos de forma definitiva
+            if(!escutaNotificacoesAtiva) {
+                escutaNotificacoesAtiva = true;
                 db.ref('pedidos').limitToLast(1).on('child_added', (childSnap) => {
-                    const novoPed = childSnap.val();
-                    if(novoPed && novoPed.timestamp > appStartTime) {
+                    const novoItem = childSnap.val();
+                    if(novoItem && novoItem.timestamp > appStartTime) {
                         tocarBeep();
-                        enviarNotificacao("Novo Pedido Recebido!", `${novoPed.cliente} - R$ ${novoPed.total.toFixed(2)}`);
+                        enviarNotificacao("Novo Pedido Recebido!", `${novoItem.cliente} - R$ ${novoItem.total.toFixed(2)}`);
                     }
                 });
             }
@@ -426,24 +392,17 @@
 
         function atualizarListasMenu() {
             const sc = document.getElementById('cliente'), fc = document.getElementById('filtro-cliente'), fp = document.getElementById('filtro-produto');
-            const val = sc.value;
-            const fCVal = fc.value;
-            const fPVal = fp.value;
+            const valSel = sc.value, valFc = fc.value, valFp = fp.value;
             
             const cSet = new Set(); 
             todosPedidos.forEach(p => { if(p.cliente) cSet.add(p.cliente); });
             const clientesOrdenados = [...cSet].sort();
 
             sc.innerHTML = '<option value="">Selecione...</option><option value="NOVO_CLIENTE">+ NOVO CLIENTE...</option>';
-            clientesOrdenados.forEach(c => { 
-                const o = document.createElement('option'); 
-                o.value = c; o.text = c; 
-                if(c === val) o.selected = true; 
-                sc.add(o); 
-            });
+            clientesOrdenados.forEach(c => { const o = document.createElement('option'); o.value = c; o.text = c; if(c === valSel) o.selected = true; sc.add(o); });
             
-            fc.innerHTML = '<option value="">Todos</option>' + clientesOrdenados.map(c => `<option value="${c}" ${c===fCVal?'selected':''}>${c}</option>`).join('');
-            fp.innerHTML = '<option value="">Todos</option>' + listaProdutosBase.map(p => `<option value="${p}" ${p===fPVal?'selected':''}>${p}</option>`).join('');
+            fc.innerHTML = '<option value="">Todos</option>' + clientesOrdenados.map(c => `<option value="${c}" ${c === valFc ? 'selected' : ''}>${c}</option>`).join('');
+            fp.innerHTML = '<option value="">Todos</option>' + listaProdutosBase.map(p => `<option value="${p}" ${p === valFp ? 'selected' : ''}>${p}</option>`).join('');
         }
 
         function listarPedidos() {
@@ -452,18 +411,17 @@
             const fP = document.getElementById('filtro-produto').value;
             const fI = document.getElementById('filtro-inicio').value;
             const fF = document.getElementById('filtro-fim').value;
-            const fPeriodo = document.getElementById('filtro-periodo-todos').value;
+            const filtroMeses = document.getElementById('filtro-meses').value;
             const agora = Date.now();
             
-            let htmlBuffer = "";
+            let conteudoHTML = "";
             
             const filtrados = todosPedidos.filter(p => {
                 let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
                 
-                // Filtro de meses para a aba 'todos'
-                if(modoAtual === 'todos' && fPeriodo !== 'todos') {
-                    const mesesVal = parseInt(fPeriodo);
-                    const limiteTempo = mesesVal * 30 * 24 * 60 * 60 * 1000;
+                // Validação do corte por meses na aba Todos
+                if(modoAtual === 'todos' && filtroMeses !== 'todos') {
+                    const limiteTempo = parseInt(filtroMeses) * 30 * 24 * 60 * 60 * 1000;
                     if((agora - p.timestamp) > limiteTempo) return false;
                 }
 
@@ -480,7 +438,7 @@
                 let isNovo = (agora - p.timestamp < 86400000) && p.entrega === 'Pendente' && p.pagamento === 'Pendente';
                 let cor = entOk ? (pagOk ? "var(--verde-claro)" : "var(--vermelho-alerta)") : "var(--cinza-pendente)";
                 
-                htmlBuffer += `<div class="pedido-item" style="border-left-color: ${cor}" onclick="abrirDetalhesPedido('${p.id}')">
+                conteudoHTML += `<div class="pedido-item" style="border-left-color: ${cor}" onclick="abrirDetalhesPedido('${p.id}')">
                     ${isNovo ? '<span class="badge-novo">NOVO</span>' : ''}
                     <button class="btn-del" onclick="event.stopPropagation(); excluirPedido('${p.id}')">✕</button>
                     <div style="font-size:10px; color:#94a3b8;">${p.data.split('-').reverse().join('/')}</div>
@@ -499,123 +457,113 @@
                     </div>
                 </div>`;
             });
-            
-            lista.innerHTML = htmlBuffer;
+            lista.innerHTML = conteudoHTML;
         }
 
         function abrirDetalhesPedido(id) {
             const p = todosPedidos.find(x => x.id === id);
             if(!p) return;
 
-            let tabelaItens = `
-                <table class="detalhe-tabela">
-                    <thead>
-                        <tr>
-                            <th>Prod</th>
-                            <th>Qtd</th>
-                            <th>Un.</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-            p.itens.forEach(i => {
-                tabelaItens += `
+            let tabela = `<table class="detalhe-tabela">
+                <thead>
                     <tr>
-                        <td>${i.produto}</td>
-                        <td>${i.qtd}</td>
-                        <td>R$ ${i.preco.toFixed(2)}</td>
-                        <td>R$ ${(i.qtd * i.preco).toFixed(2)}</td>
-                    </tr>`;
+                        <th>Produto</th>
+                        <th>Qtd</th>
+                        <th>Valor Un.</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            p.itens.forEach(i => {
+                tabela += `<tr>
+                    <td>${i.produto}</td>
+                    <td>${i.qtd}</td>
+                    <td>R$ ${parseFloat(i.preco || 0).toFixed(2)}</td>
+                    <td>R$ ${(i.qtd * (i.preco || 0)).toFixed(2)}</td>
+                </tr>`;
             });
-            tabelaItens += `</tbody></table>`;
+            tabela += `</tbody></table>`;
 
-            const conteudo = `
-                <div class="detalhe-info-box">
+            const html = `
+                <div style="text-align: left; padding: 5px 0;">
                     <div class="detalhe-linha"><b>Data:</b> ${p.data.split('-').reverse().join('/')}</div>
                     <div class="detalhe-linha"><b>Cliente:</b> ${p.cliente}</div>
-                    <div class="detalhe-linha"><b>Status Entrega:</b> ${p.entrega}</div>
-                    <div class="detalhe-linha"><b>Status Pgto:</b> ${p.pagamento} ${p.formaPg?`(${p.formaPg})`:''}</div>
-                    ${p.descricao ? `<div class="detalhe-linha"><b>Obs:</b> ${p.descricao}</div>` : ''}
-                    ${tabelaItens}
-                    <div style="margin-top:12px; text-align:right; font-size:14px; font-weight:900; color:var(--verde-escuro);">
+                    <div class="detalhe-linha"><b>Entrega:</b> ${p.entrega}</div>
+                    <div class="detalhe-linha"><b>Pagamento:</b> ${p.pagamento} ${p.formaPg ? `(${p.formaPg})` : ''}</div>
+                    ${p.descricao ? `<div class="detalhe-linha"><b>Observação:</b> ${p.descricao}</div>` : ''}
+                    ${tabela}
+                    <div style="margin-top:15px; font-weight:900; text-align:right; color:var(--verde-escuro); font-size:14px;">
                         TOTAL DO PEDIDO: R$ ${p.total.toFixed(2)}
                     </div>
                 </div>`;
 
-            document.getElementById('detalhes-conteudo').innerHTML = conteudo;
-            
+            document.getElementById('conteudo-detalhes').innerHTML = html;
             document.getElementById('btn-detalhe-editar').onclick = () => { fecharModalDetalhes(); prepararEdicao(p.id); };
-            document.getElementById('btn-detalhe-imprimir').onclick = () => { imprimirPedidoUnico(p.id); };
-
-            document.getElementById('modalDetalhes').style.display = 'flex';
+            document.getElementById('btn-detalhe-imprimir').onclick = () => { imprimirComprovanteIndividual(p.id); };
+            document.getElementById('modalDetalhes').style.display = "flex";
         }
 
-        function fecharModalDetalhes() { document.getElementById('modalDetalhes').style.display = 'none'; }
+        function fecharModalDetalhes() { document.getElementById('modalDetalhes').style.display = "none"; }
 
-        function imprimirPedidoUnico(id) {
+        function imprimirComprovanteIndividual(id) {
             const p = todosPedidos.find(x => x.id === id);
             if(!p) return;
 
-            let html = `
-                <div style="padding:30px; font-family: sans-serif; color: #333; line-height: 1.5;">
-                    <h2 style="text-align:center; color:#0a3d1d; margin-bottom:5px;">BRAGANTE AGRO</h2>
-                    <p style="text-align:center; font-size:12px; margin-bottom:25px; text-transform:uppercase; font-weight:bold;">Comprovante de Pedido</p>
-                    
-                    <div style="border:1px solid #ccc; padding:15px; border-radius:6px; margin-bottom:20px;">
-                        <div><b>Data do Pedido:</b> ${p.data.split('-').reverse().join('/')}</div>
-                        <div><b>Cliente:</b> ${p.cliente}</div>
-                        <div><b>Status Entrega:</b> ${p.entrega}</div>
-                        <div><b>Status Pagamento:</b> ${p.pagamento} ${p.formaPg?`(${p.formaPg})`:''}</div>
-                        ${p.descricao ? `<div><b>Observações:</b> ${p.descricao}</div>` : ''}
-                    </div>
-
-                    <table style="width:100%; border-collapse: collapse; font-size: 13px; margin-top:15px;">
-                        <thead>
-                            <tr style="background:#f1f5f9; text-align:left;">
-                                <th style="padding:10px; border-bottom:2px solid #ddd;">Produto</th>
-                                <th style="padding:10px; border-bottom:2px solid #ddd; text-align:center;">Qtd</th>
-                                <th style="padding:10px; border-bottom:2px solid #ddd; text-align:right;">Preço Un.</th>
-                                <th style="padding:10px; border-bottom:2px solid #ddd; text-align:right;">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-
+            let linhasTabela = "";
             p.itens.forEach(i => {
-                html += `
-                    <tr>
-                        <td style="padding:10px; border-bottom:1px solid #eee;">${i.produto}</td>
-                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;">${i.qtd}</td>
-                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">R$ ${i.preco.toFixed(2)}</td>
-                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">R$ ${(i.qtd * i.preco).toFixed(2)}</td>
-                    </tr>`;
+                linhasTabela += `<tr>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">${i.produto}</td>
+                    <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">${i.qtd}</td>
+                    <td style="padding:8px; border-bottom:1px solid #eee; text-align:right;">R$ ${parseFloat(i.preco || 0).toFixed(2)}</td>
+                    <td style="padding:8px; border-bottom:1px solid #eee; text-align:right;">R$ ${(i.qtd * (i.preco || 0)).toFixed(2)}</td>
+                </tr>`;
             });
 
-            html += `
-                        </tbody>
+            const layoutHtml = `
+                <div style="padding:30px; font-family:sans-serif; color:#333; line-height:1.4;">
+                    <h2 style="text-align:center; color:#0a3d1d; margin:0 0 5px 0;">BRAGANTE AGRO</h2>
+                    <p style="text-align:center; font-size:11px; text-transform:uppercase; font-weight:bold; margin:0 0 20px 0;">Comprovante de Pedido</p>
+                    <div style="border:1px solid #ccc; padding:12px; border-radius:6px; margin-bottom:20px; font-size:13px;">
+                        <div><b>Data:</b> ${p.data.split('-').reverse().join('/')}</div>
+                        <div><b>Cliente:</b> ${p.cliente}</div>
+                        <div><b>Entrega:</b> ${p.entrega}</div>
+                        <div><b>Pagamento:</b> ${p.pagamento} ${p.formaPg ? `(${p.formaPg})` : ''}</div>
+                        ${p.descricao ? `<div><b>Observações:</b> ${p.descricao}</div>` : ''}
+                    </div>
+                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                        <thead>
+                            <tr style="background:#f1f5f9; text-align:left;">
+                                <th style="padding:8px; border-bottom:2px solid #ddd;">Produto</th>
+                                <th style="padding:8px; border-bottom:2px solid #ddd; text-align:center;">Qtd</th>
+                                <th style="padding:8px; border-bottom:2px solid #ddd; text-align:right;">Preço Un.</th>
+                                <th style="padding:8px; border-bottom:2px solid #ddd; text-align:right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>${linhasTabela}</tbody>
                     </table>
-                    <div style="margin-top:30px; border-top:2px solid #0a3d1d; padding-top:15px; text-align:right;">
-                        <span style="font-size:18px; font-weight:900; color:#0a3d1d;">VALOR TOTAL: R$ ${p.total.toFixed(2)}</span>
+                    <div style="margin-top:25px; border-top:2px solid #0a3d1d; padding-top:10px; text-align:right;">
+                        <span style="font-size:16px; font-weight:900; color:#0a3d1d;">VALOR TOTAL: R$ ${p.total.toFixed(2)}</span>
                     </div>
                 </div>`;
 
             const printArea = document.getElementById('print-section');
-            printArea.innerHTML = html;
+            printArea.innerHTML = layoutHtml;
             window.print();
         }
 
+        // CORREÇÃO DO RELATÓRIO COM FILTROS, SOMAS E OPÇÃO INDIVIDUAL
         function gerarRelatorioImpressao() {
             const fC = document.getElementById('filtro-cliente').value;
             const fP = document.getElementById('filtro-produto').value;
             const fI = document.getElementById('filtro-inicio').value;
             const fF = document.getElementById('filtro-fim').value;
-            const fPeriodo = document.getElementById('filtro-periodo-todos').value;
+            const filtroMeses = document.getElementById('filtro-meses').value;
             const agora = Date.now();
 
             const filtrados = todosPedidos.filter(p => {
                 let pM = modoAtual === 'entregas' ? p.entrega === 'Pendente' : (modoAtual === 'pagamentos' ? p.pagamento === 'Pendente' : true);
-                if(modoAtual === 'todos' && fPeriodo !== 'todos') {
-                    const mesesVal = parseInt(fPeriodo);
-                    const limiteTempo = mesesVal * 30 * 24 * 60 * 60 * 1000;
+                if(modoAtual === 'todos' && filtroMeses !== 'todos') {
+                    const limiteTempo = parseInt(filtroMeses) * 30 * 24 * 60 * 60 * 1000;
                     if((agora - p.timestamp) > limiteTempo) return false;
                 }
                 let pC = fC === "" || p.cliente === fC;
@@ -626,47 +574,48 @@
 
             if(filtrados.length === 0) return alert("Nada para imprimir com os filtros selecionados.");
 
-            if(confirm("Deseja imprimir cada pedido em uma folha individual detalhada?")) {
-                let htmlAgrupado = "";
+            if(confirm("Deseja imprimir cada pedido em uma folha separada detalhada?")) {
+                let htmlAcumulado = "";
                 filtrados.forEach((p, idx) => {
-                    let breakClass = (idx < filtrados.length - 1) ? 'page-break' : '';
-                    let tabelaItens = `<table style="width:100%; border-collapse: collapse; font-size: 13px; margin-top:15px;">
-                        <thead>
-                            <tr style="background:#f1f5f9; text-align:left;">
-                                <th style="padding:10px; border-bottom:2px solid #ddd;">Produto</th>
-                                <th style="padding:10px; border-bottom:2px solid #ddd; text-align:center;">Qtd</th>
-                                <th style="padding:10px; border-bottom:2px solid #ddd; text-align:right;">Preço Un.</th>
-                                <th style="padding:10px; border-bottom:2px solid #ddd; text-align:right;">Subtotal</th>
-                            </tr>
-                        </thead><tbody>`;
+                    let classeQuebra = (idx < filtrados.length - 1) ? 'quebra-pagina' : '';
+                    let itemRows = "";
                     p.itens.forEach(i => {
-                        tabelaItens += `<tr>
-                            <td style="padding:10px; border-bottom:1px solid #eee;">${i.produto}</td>
-                            <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;">${i.qtd}</td>
-                            <td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">R$ ${i.preco.toFixed(2)}</td>
-                            <td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">R$ ${(i.qtd * i.preco).toFixed(2)}</td>
+                        itemRows += `<tr>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">${i.produto}</td>
+                            <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">${i.qtd}</td>
+                            <td style="padding:8px; border-bottom:1px solid #eee; text-align:right;">R$ ${parseFloat(i.preco || 0).toFixed(2)}</td>
+                            <td style="padding:8px; border-bottom:1px solid #eee; text-align:right;">R$ ${(i.qtd * (i.preco || 0)).toFixed(2)}</td>
                         </tr>`;
                     });
-                    tabelaItens += `</tbody></table>`;
 
-                    htmlAgrupado += `
-                        <div class="${breakClass}" style="padding:30px; font-family: sans-serif; color: #333; line-height: 1.5;">
-                            <h2 style="text-align:center; color:#0a3d1d; margin-bottom:5px;">BRAGANTE AGRO</h2>
-                            <p style="text-align:center; font-size:12px; margin-bottom:25px; text-transform:uppercase; font-weight:bold;">Comprovante de Pedido</p>
-                            <div style="border:1px solid #ccc; padding:15px; border-radius:6px; margin-bottom:20px;">
-                                <div><b>Data do Pedido:</b> ${p.data.split('-').reverse().join('/')}</div>
+                    htmlAcumulado += `
+                        <div class="${classeQuebra}" style="padding:30px; font-family:sans-serif; color:#333; line-height:1.4;">
+                            <h2 style="text-align:center; color:#0a3d1d; margin:0 0 5px 0;">BRAGANTE AGRO</h2>
+                            <p style="text-align:center; font-size:11px; text-transform:uppercase; font-weight:bold; margin:0 0 20px 0;">Comprovante de Pedido</p>
+                            <div style="border:1px solid #ccc; padding:12px; border-radius:6px; margin-bottom:20px; font-size:13px;">
+                                <div><b>Data:</b> ${p.data.split('-').reverse().join('/')}</div>
                                 <div><b>Cliente:</b> ${p.cliente}</div>
-                                <div><b>Status Entrega:</b> ${p.entrega}</div>
-                                <div><b>Status Pagamento:</b> ${p.pagamento} ${p.formaPg?`(${p.formaPg})`:''}</div>
+                                <div><b>Entrega:</b> ${p.entrega}</div>
+                                <div><b>Pagamento:</b> ${p.pagamento} ${p.formaPg ? `(${p.formaPg})` : ''}</div>
                                 ${p.descricao ? `<div><b>Observações:</b> ${p.descricao}</div>` : ''}
                             </div>
-                            ${tabelaItens}
-                            <div style="margin-top:30px; border-top:2px solid #0a3d1d; padding-top:15px; text-align:right;">
-                                <span style="font-size:18px; font-weight:900; color:#0a3d1d;">VALOR TOTAL: R$ ${p.total.toFixed(2)}</span>
+                            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                                <thead>
+                                    <tr style="background:#f1f5f9; text-align:left;">
+                                        <th style="padding:8px; border-bottom:2px solid #ddd;">Produto</th>
+                                        <th style="padding:8px; border-bottom:2px solid #ddd; text-align:center;">Qtd</th>
+                                        <th style="padding:8px; border-bottom:2px solid #ddd; text-align:right;">Preço Un.</th>
+                                        <th style="padding:8px; border-bottom:2px solid #ddd; text-align:right;">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${itemRows}</tbody>
+                            </table>
+                            <div style="margin-top:25px; border-top:2px solid #0a3d1d; padding-top:10px; text-align:right;">
+                                <span style="font-size:16px; font-weight:900; color:#0a3d1d;">VALOR TOTAL: R$ ${p.total.toFixed(2)}</span>
                             </div>
                         </div>`;
                 });
-                document.getElementById('print-section').innerHTML = htmlAgrupado;
+                document.getElementById('print-section').innerHTML = htmlAcumulado;
                 window.print();
             } else {
                 let totalGeral = 0;
@@ -690,7 +639,7 @@
                     totalGeral += p.total;
                     let itensTexto = p.itens.map(i => {
                         resumoItens[i.produto] = (resumoItens[i.produto] || 0) + i.qtd;
-                        return `${i.qtd}x ${i.produto} (Un: R$ ${i.preco.toFixed(2)})`;
+                        return `${i.qtd}x ${i.produto} (Un: R$ ${parseFloat(i.preco || 0).toFixed(2)})`;
                     }).join('<br>');
 
                     html += `
@@ -733,13 +682,11 @@
             } else {
                 if(confirm(`Confirmar que o pedido de "${p.cliente}" realmente foi entregue?`)) {
                     db.ref('pedidos/'+id).update({entrega:'Entregue'}).then(() => {
-                        if(p.pagamento === 'Pendente') {
-                            setTimeout(() => {
-                                if(confirm("A entrega foi realizada! O pedido já foi pago?")) {
-                                    abrirModal(id);
-                                }
-                            }, 350);
-                        }
+                        setTimeout(() => {
+                            if(confirm("Pedido entregue com sucesso! O pedido já foi pago?")) {
+                                abrirModal(id);
+                            }
+                        }, 400);
                     });
                 }
             }
@@ -756,11 +703,10 @@
             document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active')); 
             document.getElementById('nav-' + m).classList.add('active'); 
             
-            // Exibe o seletor de período apenas na aba Todos
             if(m === 'todos') {
-                document.getElementById('wrapper-periodo-todos').style.display = 'block';
+                document.getElementById('box-periodo-todos').style.display = "block";
             } else {
-                document.getElementById('wrapper-periodo-todos').style.display = 'none';
+                document.getElementById('box-periodo-todos').style.display = "none";
             }
             listarPedidos(); 
         }
@@ -773,6 +719,16 @@
             document.getElementById('data').valueAsDate = new Date();
             adicionarLinhaProduto(); 
             document.getElementById('btn-cancelar').style.display = 'none'; 
+        }
+
+        function ajustarModoAbaPeloStatus(p) {
+            if(p.entrega === 'Pendente') {
+                mudarModo('entregas');
+            } else if (p.pagamento === 'Pendente') {
+                mudarModo('pagamentos');
+            } else {
+                mudarModo('todos');
+            }
         }
 
         function prepararEdicao(id) { 
@@ -793,7 +749,7 @@
         function selecionarForma(f) { db.ref('pedidos/'+pedidoEmPagamento).update({pagamento:'Pago', formaPg:f}); fecharModal(); }
         function selecionarOutros() { const d = prompt("Qual a forma de pagamento?"); if (d) selecionarForma(d); }
         function toggleAccordion() { const p = document.getElementById("filtroPanel"); p.style.display = p.style.display === "block" ? "none" : "block"; }
-        function limparFiltros() { document.getElementById('filtro-cliente').value = ""; document.getElementById('filtro-produto').value = ""; document.getElementById('filtro-inicio').value = ""; document.getElementById('filtro-fim').value = ""; document.getElementById('filtro-periodo-todos').value = "1"; listarPedidos(); }
+        function limparFiltros() { document.getElementById('filtro-cliente').value = ""; document.getElementById('filtro-produto').value = ""; document.getElementById('filtro-inicio').value = ""; document.getElementById('filtro-fim').value = ""; document.getElementById('filtro-meses').value = "1"; listarPedidos(); }
 
         document.getElementById('data').valueAsDate = new Date();
         adicionarLinhaProduto();
