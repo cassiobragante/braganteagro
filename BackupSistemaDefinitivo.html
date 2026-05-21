@@ -120,7 +120,6 @@
         .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width: 300px; text-align: center; }
         .modal-buttons-simnao { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
 
-        /* --- NOVOS ESTILOS PARA OS ACESSOS INTEGRADOS DOS OUTROS SISTEMAS --- */
         .container-sistema-flutuante { display: none; position: fixed; inset: 0; background: #f1f5f9; z-index: 200; width: 100%; height: 100%; }
         .iframe-sistema { width: 100%; height: calc(100% - 50px); border: none; display: block; }
         .barra-topo-sistema { height: 50px; background: var(--verde-escuro); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; box-sizing: border-box; color: white; font-weight: 700; font-size: 14px; }
@@ -307,10 +306,6 @@
             }
         }
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-
         const firebaseConfig = {
             apiKey: "AIzaSyCiQh8MEy5SlPCkS8psN0EQ59W2PLKXo8s",
             authDomain: "bragante-agro.firebaseapp.com",
@@ -341,7 +336,6 @@
             });
         });
 
-        /* --- NOVAS FUNÇÕES DE INTERAÇÃO DOS IFRAMES --- */
         function abrirJanelaSistema(sistema) {
             document.getElementById('tela-flutuante-' + sistema).style.display = 'block';
         }
@@ -435,13 +429,17 @@
                 }
             });
             if(itens.length === 0) return alert("Adicione um item");
-            const dados = { data, cliente, itens, total, descricao: obs || "", timestamp: firebase.database.ServerValue.TIMESTAMP };
             
+            const agoraData = new Date();
+            const dataEdicaoFormatada = agoraData.toLocaleDateString('pt-BR') + ' ' + agoraData.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+
             if(idEdit) {
-                db.ref('pedidos/'+idEdit).update({...dados, editado: true}).then(() => { cancelarEdicao(); });
+                const dadosAtualizacao = { data, cliente, itens, total, descricao: obs || "", editado: true, dataEdicao: dataEdicaoFormatada };
+                db.ref('pedidos/'+idEdit).update(dadosAtualizacao).then(() => { cancelarEdicao(); });
             } else {
                 const nid = db.ref('pedidos').push().key;
-                db.ref('pedidos/'+nid).set({...dados, id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false}).then(() => { cancelarEdicao(); });
+                const dadosNovo = { data, cliente, itens, total, descricao: obs || "", id: nid, entrega: 'Pendente', pagamento: 'Pendente', formaPg: '', editado: false, timestamp: firebase.database.ServerValue.TIMESTAMP };
+                db.ref('pedidos/'+nid).set(dadosNovo).then(() => { cancelarEdicao(); });
             }
         }
 
@@ -471,9 +469,9 @@
                 });
             }
             
-            todosPedidos.sort((a,b) => (a.timestamp || 0) - (b.timestamp || 0));
+            let pedidosOrdenadosPorCriacao = [...todosPedidos].sort((a,b) => (a.timestamp || 0) - (b.timestamp || 0));
             mapeamentoNumeros = {};
-            todosPedidos.forEach((p, index) => {
+            pedidosOrdenadosPorCriacao.forEach((p, index) => {
                 let numeroSequencial = 100 + index;
                 mapeamentoNumeros[p.id] = String(numeroSequencial).padStart(4, '0');
             });
@@ -485,7 +483,7 @@
 
             mudancasDetectadas.forEach(p => {
                 let numEx = mapeamentoNumeros[p.id] || "0000";
-                enviarNotificacao("Pedido Alterado", `Pedido #${numEx} de ${p.cliente} foi atualizado.`);
+                enviarNotificacao("Pedido Alterado", `Pedido #${numEx} de ${p.cliente} foi updated.`);
             });
 
             primeiraCargaDatabase = false;
@@ -564,6 +562,10 @@
 
             if(p.descricao) {
                 layoutHtml += `<div class="detalhe-obs-text"><b>Obs:</b> ${p.descricao}</div>`;
+            }
+            
+            if(p.editado && p.dataEdicao) {
+                layoutHtml += `<div style="font-size:10px; color:#991b1b; margin-top:5px; font-weight:600;">Última Atualização: ${p.dataEdicao}</div>`;
             }
 
             layoutHtml += `
@@ -691,6 +693,7 @@
                     <div style="font-weight:700; font-size:15px; margin:3px 0;">${p.cliente}</div>
                     <div style="font-size:12px; color:#475569;">${(p.itens||[]).map(i=>`${i.qtd}x ${i.produto}`).join(', ')}</div>
                     ${p.descricao ? `<div style="font-size:10px; color:var(--verde-claro); font-style:italic;">Obs: ${p.descricao}</div>` : ''}
+                    ${p.editado && p.dataEdicao ? `<div style="font-size:9px; color:#991b1b; font-style:italic; margin-top:2px;">Atualizado em: ${p.dataEdicao}</div>` : ''}
                     
                     <div class="status-container">
                         <span class="tag ${entOk?'tag-verde':''}">ENTREGA: ${p.entrega}</span>
